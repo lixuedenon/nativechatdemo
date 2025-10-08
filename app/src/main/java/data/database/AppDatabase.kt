@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/nativechatdemo/data/database/AppDatabase.kt
 package com.example.nativechatdemo.data.database
 
 import android.content.Context
@@ -23,16 +22,16 @@ import kotlinx.coroutines.launch
         User::class,
         Message::class,
         Conversation::class,
-        Character::class  // 🔥 添加Character
+        Character::class
     ],
-    version = 2,  // 🔥 升级数据库版本
+    version = 3,  // 🔥 从2改成3（因为添加了favorChange字段）
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun messageDao(): MessageDao
     abstract fun conversationDao(): ConversationDao
-    abstract fun characterDao(): CharacterDao  // 🔥 添加CharacterDao
+    abstract fun characterDao(): CharacterDao
 
     companion object {
         @Volatile
@@ -45,8 +44,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "chat_trainer_database"
                 )
-                    .fallbackToDestructiveMigration()  // 🔥 允许破坏性升级
-                    .addCallback(DatabaseCallback(context))  // 🔥 添加回调预填充数据
+                    .fallbackToDestructiveMigration()  // ✅ 保留这个
+                    .addCallback(DatabaseCallback(context))
                     .build()
                 INSTANCE = instance
                 instance
@@ -73,7 +72,7 @@ abstract class AppDatabase : RoomDatabase() {
          * 预填充角色数据
          */
         private suspend fun populateDatabase(characterDao: CharacterDao) {
-            // 4个预设角色（对应Flutter版本）
+            // 预设角色数据
             val characters = listOf(
                 Character(
                     id = "gentle_girl",
@@ -103,9 +102,45 @@ abstract class AppDatabase : RoomDatabase() {
                     isVip = false
                 ),
                 Character(
+                    id = "sunny_girl",
+                    name = "阳光女生",
+                    description = "她阳光开朗，充满正能量，是个很好的聊天对象",
+                    avatar = "sunny_girl",
+                    type = "sunny",
+                    gender = "female",
+                    isVip = false
+                ),
+                Character(
+                    id = "gentle_boy",
+                    name = "温柔男生",
+                    description = "他温柔体贴，善解人意，是个暖男",
+                    avatar = "gentle_boy",
+                    type = "gentle",
+                    gender = "male",
+                    isVip = false
+                ),
+                Character(
+                    id = "lively_boy",
+                    name = "活泼男生",
+                    description = "他活泼开朗，幽默风趣，和他聊天很开心",
+                    avatar = "lively_boy",
+                    type = "lively",
+                    gender = "male",
+                    isVip = false
+                ),
+                Character(
+                    id = "elegant_boy",
+                    name = "高冷男生",
+                    description = "他神秘高冷，不易接近，但很有魅力",
+                    avatar = "elegant_boy",
+                    type = "elegant",
+                    gender = "male",
+                    isVip = false
+                ),
+                Character(
                     id = "sunny_boy",
                     name = "阳光男生",
-                    description = "他阳光开朗，积极向上，是个很好的聊天对象",
+                    description = "他阳光积极，充满正能量，很有感染力",
                     avatar = "sunny_boy",
                     type = "sunny",
                     gender = "male",
