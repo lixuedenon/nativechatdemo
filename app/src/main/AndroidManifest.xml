@@ -10,31 +10,33 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.AppCompat.Light.DarkActionBar">
+        android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
+        tools:targetApi="31">
 
-        <!-- 女生模块页 - 指定NoActionBar主题 -->
+        <!-- 女生模块页 -->
         <activity
             android:name=".ui.modules.FemaleModulesActivity"
-            android:label="女生篇"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 男生模块页 - 指定NoActionBar主题 -->
+        <!-- 男生模块页 -->
         <activity
             android:name=".ui.modules.MaleModulesActivity"
-            android:label="男生篇"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
         <!-- 角色选择页 -->
         <activity
             android:name=".ui.character.CharacterSelectionActivity"
-            android:label="选择角色"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 主页 - 也改为NoActionBar，因为你的新首页可能不需要ActionBar -->
+        <!-- 复盘页面 -->
+        <activity
+            android:name=".ui.review.ReviewActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- 主页 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -46,7 +48,8 @@
         <activity
             android:name=".ui.chat.ChatActivity"
             android:windowSoftInputMode="adjustResize"
-            android:exported="false" />
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
     </application>
 

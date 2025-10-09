@@ -1,8 +1,10 @@
-// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/chat/ChatActivity.kt
 package com.example.nativechatdemo.ui.chat
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
@@ -12,6 +14,7 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +37,8 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var favorabilityText: TextView
     private lateinit var roundsText: TextView
 
+    private var currentCharacter: Character? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_chat)
@@ -51,6 +56,13 @@ class ChatActivity : AppCompatActivity() {
             gender = if (characterId.contains("boy")) "male" else "female"
         )
 
+        currentCharacter = character
+
+        // 初始化Toolbar
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
         supportActionBar?.title = characterName
 
         initViews()
@@ -58,6 +70,85 @@ class ChatActivity : AppCompatActivity() {
         observeData()
         setupInput()
         setupKeyboardHandling()
+    }
+
+    // 🔥 重写这个方法来加载菜单
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_chat, menu)
+        return true
+    }
+
+    // 🔥 处理菜单项点击
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            R.id.action_stop -> {
+                showStopDialog()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun showStopDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("停止对话")
+            .setMessage("确定要停止本次对话吗？")
+            .setPositiveButton("确定") { _, _ ->
+                handleStopConversation()
+            }
+            .setNegativeButton("取消", null)
+            .show()
+    }
+
+    private fun handleStopConversation() {
+        val conversation = viewModel.conversation.value
+        if (conversation == null) {
+            finish()
+            return
+        }
+
+        val rounds = conversation.actualRounds
+
+        if (rounds > 5) {
+            AlertDialog.Builder(this)
+                .setTitle("进入复盘")
+                .setMessage("对话轮数: $rounds 轮\n准备查看复盘分析")
+                .setPositiveButton("进入") { _, _ ->
+                    startReviewActivity()
+                }
+                .setCancelable(false)
+                .show()
+        } else {
+            AlertDialog.Builder(this)
+                .setTitle("对话太短")
+                .setMessage("对话轮数不足6轮，无法生成复盘")
+                .setPositiveButton("确定") { _, _ ->
+                    finish()
+                }
+                .show()
+        }
+    }
+
+    private fun startReviewActivity() {
+        val intent = Intent(this, com.example.nativechatdemo.ui.review.ReviewActivity::class.java)
+
+        val conversation = viewModel.conversation.value
+        val character = currentCharacter
+
+        intent.putExtra("conversationId", conversation?.id)
+        intent.putExtra("userId", conversation?.userId)
+        intent.putExtra("characterId", character?.id)
+        intent.putExtra("characterName", character?.name)
+        intent.putExtra("finalFavor", conversation?.currentFavorability)
+        intent.putExtra("totalRounds", conversation?.actualRounds)
+        intent.putExtra("favorPoints", conversation?.favorPoints)
+
+        startActivity(intent)
+        finish()
     }
 
     private fun initViews() {
@@ -78,17 +169,14 @@ class ChatActivity : AppCompatActivity() {
             false
         }
 
-        // 好感线柱子点击事件
         favorLineView.onPointClickListener = { point ->
             Log.d("ChatActivity", "点击柱子: round=${point.round}")
 
-            // 滚动到对应消息
             val messagePosition = calculateMessagePosition(point.round)
             if (messagePosition >= 0) {
                 recyclerView.smoothScrollToPosition(messagePosition)
             }
 
-            // 显示详情
             val message = if (point.reason.isNotEmpty()) {
                 "第${point.round}轮\n好感度: ${point.favor}%\n\n💡 变化原因:\n${point.reason}"
             } else {
@@ -118,7 +206,7 @@ class ChatActivity : AppCompatActivity() {
             viewModel.conversation.collect { conversation ->
                 conversation?.let {
                     favorabilityText.text = "好感度: ${it.currentFavorability}"
-                    roundsText.text = "轮数: ${it.actualRounds}/45"  // 直接显示45
+                    roundsText.text = "轮数: ${it.actualRounds}/45"
 
                     Log.d("ChatActivity", "当前轮数: ${it.actualRounds}/45")
                 }
@@ -199,13 +287,11 @@ class ChatActivity : AppCompatActivity() {
             return
         }
 
-        // 检查是否达到45轮限制
         val conversation = viewModel.conversation.value
         if (conversation != null) {
             Log.d("ChatActivity", "发送前检查：当前轮数=${conversation.actualRounds}")
 
             if (conversation.actualRounds >= 45) {
-                // 已经聊了45轮，不能再继续
                 Log.d("ChatActivity", "已达45轮上限，显示结束对话框")
 
                 AlertDialog.Builder(this)
@@ -213,12 +299,11 @@ class ChatActivity : AppCompatActivity() {
                     .setMessage("本次对话已达到45轮上限\n\n最终好感度: ${conversation.currentFavorability}%")
                     .setPositiveButton("确定") { dialog, _ ->
                         dialog.dismiss()
-                        finish()  // 关闭Activity
+                        finish()
                     }
                     .setCancelable(false)
                     .show()
 
-                // 禁用输入
                 inputEditText.isEnabled = false
                 sendButton.isEnabled = false
 
@@ -226,7 +311,6 @@ class ChatActivity : AppCompatActivity() {
             }
         }
 
-        // 正常发送消息
         Log.d("ChatActivity", "发送消息：$content")
         viewModel.sendMessage(content)
         inputEditText.text.clear()
