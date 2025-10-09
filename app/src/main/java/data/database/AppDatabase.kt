@@ -1,3 +1,7 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/data/database/AppDatabase.kt
+// 文件类型：Kotlin Abstract Class (Room Database)
+// 修改内容：版本号3→4，增加ConversationAnalysis实体和DAO
+
 package com.example.nativechatdemo.data.database
 
 import android.content.Context
@@ -9,10 +13,12 @@ import com.example.nativechatdemo.data.dao.ConversationDao
 import com.example.nativechatdemo.data.dao.MessageDao
 import com.example.nativechatdemo.data.dao.UserDao
 import com.example.nativechatdemo.data.dao.CharacterDao
+import com.example.nativechatdemo.data.dao.ConversationAnalysisDao
 import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.Message
 import com.example.nativechatdemo.data.model.User
 import com.example.nativechatdemo.data.model.Character
+import com.example.nativechatdemo.data.model.ConversationAnalysis
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,9 +28,10 @@ import kotlinx.coroutines.launch
         User::class,
         Message::class,
         Conversation::class,
-        Character::class
+        Character::class,
+        ConversationAnalysis::class
     ],
-    version = 3,  // 🔥 从2改成3（因为添加了favorChange字段）
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,6 +39,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun messageDao(): MessageDao
     abstract fun conversationDao(): ConversationDao
     abstract fun characterDao(): CharacterDao
+    abstract fun conversationAnalysisDao(): ConversationAnalysisDao
 
     companion object {
         @Volatile
@@ -44,7 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "chat_trainer_database"
                 )
-                    .fallbackToDestructiveMigration()  // ✅ 保留这个
+                    .fallbackToDestructiveMigration()
                     .addCallback(DatabaseCallback(context))
                     .build()
                 INSTANCE = instance
@@ -52,9 +60,6 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /**
-         * 数据库创建回调 - 预填充角色数据
-         */
         private class DatabaseCallback(
             private val context: Context
         ) : RoomDatabase.Callback() {
@@ -68,11 +73,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /**
-         * 预填充角色数据
-         */
         private suspend fun populateDatabase(characterDao: CharacterDao) {
-            // 预设角色数据
             val characters = listOf(
                 Character(
                     id = "gentle_girl",

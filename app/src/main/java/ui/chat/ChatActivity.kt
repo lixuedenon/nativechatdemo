@@ -1,3 +1,7 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/chat/ChatActivity.kt
+// 文件类型：Kotlin Class (Activity)
+// 修改内容：修改45轮到达时的处理逻辑，改为进入复盘页而不是finish()
+
 package com.example.nativechatdemo.ui.chat
 
 import android.content.Intent
@@ -58,7 +62,6 @@ class ChatActivity : AppCompatActivity() {
 
         currentCharacter = character
 
-        // 初始化Toolbar
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -72,13 +75,11 @@ class ChatActivity : AppCompatActivity() {
         setupKeyboardHandling()
     }
 
-    // 🔥 重写这个方法来加载菜单
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_chat, menu)
         return true
     }
 
-    // 🔥 处理菜单项点击
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -292,14 +293,15 @@ class ChatActivity : AppCompatActivity() {
             Log.d("ChatActivity", "发送前检查：当前轮数=${conversation.actualRounds}")
 
             if (conversation.actualRounds >= 45) {
-                Log.d("ChatActivity", "已达45轮上限，显示结束对话框")
+                Log.d("ChatActivity", "已达45轮上限，进入复盘页面")
 
+                // 🔥 修改：改为进入复盘页面，而不是直接finish()
                 AlertDialog.Builder(this)
                     .setTitle("对话结束")
                     .setMessage("本次对话已达到45轮上限\n\n最终好感度: ${conversation.currentFavorability}%")
-                    .setPositiveButton("确定") { dialog, _ ->
+                    .setPositiveButton("进入复盘") { dialog, _ ->
                         dialog.dismiss()
-                        finish()
+                        startReviewActivity()  // 进入复盘页
                     }
                     .setCancelable(false)
                     .show()

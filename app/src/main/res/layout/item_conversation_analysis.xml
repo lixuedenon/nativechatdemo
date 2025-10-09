@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/layout/item_conversation_analysis.xml -->
+<!-- 文件类型：XML Layout -->
+
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- 轮次标题 -->
+        <TextView
+            android:id="@+id/roundTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="第 1 轮"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#333333"
+            android:layout_marginBottom="8dp"/>
+
+        <!-- AI说的话 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="对方: "
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/aiMessageText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="AI的回复"
+                android:textSize="14sp"
+                android:textColor="#333333"/>
+        </LinearLayout>
+
+        <!-- 用户说的话 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="你: "
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/userMessageText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="用户的回复"
+                android:textSize="14sp"
+                android:textColor="#333333"/>
+        </LinearLayout>
+
+        <!-- 分析 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="12dp"
+            android:background="#FFF8E1"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="💡 分析"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#F57C00"/>
+
+            <TextView
+                android:id="@+id/analysisText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="分析内容"
+                android:textSize="14sp"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="2dp"/>
+        </LinearLayout>
+
+        <!-- 建议 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="8dp"
+            android:background="#E8F5E9"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="✨ 建议"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="#388E3C"/>
+
+            <TextView
+                android:id="@+id/suggestionText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="建议内容"
+                android:textSize="14sp"
+                android:textColor="#333333"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="2dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
