@@ -10,7 +10,7 @@ data class Message(
     val content: String,
     val isUser: Boolean,
     val timestamp: Long,
-    val characterCount: Int,
+    val characterCount: Int = 0,  // 🔥 改为默认值0（或者在创建时传入content.length）
 
     // 新增字段
     val favorChange: Int? = null,               // 好感度变化值

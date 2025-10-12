@@ -1,3 +1,6 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/modules/MaleModulesActivity.kt
+// 文件类型：Kotlin Class (Activity)
+
 package com.example.nativechatdemo.ui.modules
 
 import android.content.Intent
@@ -8,6 +11,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import com.example.nativechatdemo.R
 import com.example.nativechatdemo.ui.character.CharacterSelectionActivity
+import com.example.nativechatdemo.ui.radar.RadarMenuActivity
 
 class MaleModulesActivity : AppCompatActivity() {
 
@@ -29,17 +33,21 @@ class MaleModulesActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        // 其他模块 - 敬请期待
-        findViewById<CardView>(R.id.scenarioCard).setOnClickListener {
-            showComingSoon("场景模拟")
+        // 女友养成 - 敬请期待
+        findViewById<CardView>(R.id.girlfriendTrainingCard).setOnClickListener {
+            showComingSoon("女友养成")
         }
 
-        findViewById<CardView>(R.id.practiceCard).setOnClickListener {
-            showComingSoon("练习模式")
+        // 定制女友 - 敬请期待
+        findViewById<CardView>(R.id.customGirlfriendCard).setOnClickListener {
+            showComingSoon("定制女友")
         }
 
+        // 社交雷达 - 已启用 ✅
         findViewById<CardView>(R.id.radarCard).setOnClickListener {
-            showComingSoon("社交雷达")
+            val intent = Intent(this, RadarMenuActivity::class.java)
+            intent.putExtra("targetGender", "female")  // 男生篇：分析女生
+            startActivity(intent)
         }
     }
 

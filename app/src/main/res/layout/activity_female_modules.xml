@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/layout/activity_female_modules.xml -->
+<!-- 文件类型：Android Layout XML -->
+
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -81,9 +84,9 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 模块2：场景模拟 -->
+            <!-- 模块2：男友养成 -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/scenarioCard"
+                android:id="@+id/boyfriendTrainingCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -116,7 +119,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="场景模拟"
+                            android:text="男友养成"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#333333"/>
@@ -140,9 +143,9 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 模块3：练习模式 -->
+            <!-- 模块3：定制男友 -->
             <androidx.cardview.widget.CardView
-                android:id="@+id/practiceCard"
+                android:id="@+id/customBoyfriendCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
@@ -175,7 +178,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="练习模式"
+                            android:text="定制男友"
                             android:textSize="20sp"
                             android:textStyle="bold"
                             android:textColor="#333333"/>

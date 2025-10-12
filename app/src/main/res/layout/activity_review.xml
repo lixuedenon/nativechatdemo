@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 文件路径：app/src/main/res/layout/activity_review.xml -->
 <!-- 文件类型：XML Layout -->
-<!-- 修改内容：修复RecyclerView只显示一项的问题 -->
+<!-- 修改内容：增加两套按钮组，支持首次和二次复盘 -->
 
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -10,7 +10,6 @@
     android:layout_height="match_parent"
     android:background="#F5F5F5">
 
-    <!-- 顶部标题栏 -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -176,7 +175,7 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 🔥 逐条分析卡片（修改RecyclerView配置） -->
+            <!-- 逐条分析卡片 -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -199,7 +198,6 @@
                         android:textColor="#333333"
                         android:layout_marginBottom="12dp"/>
 
-                    <!-- 🔥 关键修改：禁用嵌套滚动 -->
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/analysisRecyclerView"
                         android:layout_width="match_parent"
@@ -242,62 +240,129 @@
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- 选择回复方式 -->
-            <androidx.cardview.widget.CardView
+            <!-- 🔥 首次复盘按钮组 -->
+            <LinearLayout
+                android:id="@+id/firstReviewButtonsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp">
+                android:orientation="vertical"
+                android:visibility="visible">
 
-                <LinearLayout
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="🎯 选择训练方式"
-                        android:textSize="18sp"
-                        android:textStyle="bold"
-                        android:textColor="#333333"
-                        android:layout_marginBottom="16dp"/>
+                        android:orientation="vertical"
+                        android:padding="20dp">
 
-                    <!-- 相同回复按钮 -->
-                    <Button
-                        android:id="@+id/sameReplyButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="相同回复"
-                        android:textSize="16sp"
-                        android:textColor="#FFFFFF"
-                        android:background="@drawable/button_same"
-                        android:layout_marginBottom="12dp"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🎯 选择训练方式"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:layout_marginBottom="16dp"/>
 
-                    <!-- 相近回复按钮 -->
-                    <Button
-                        android:id="@+id/similarReplyButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="相近回复"
-                        android:textSize="16sp"
-                        android:textColor="#FFFFFF"
-                        android:background="@drawable/button_similar"
-                        android:layout_marginBottom="12dp"/>
+                        <Button
+                            android:id="@+id/sameReplyButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="相同回复"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_same"
+                            android:layout_marginBottom="12dp"/>
 
-                    <!-- 自然回复按钮 -->
-                    <Button
-                        android:id="@+id/naturalReplyButton"
+                        <Button
+                            android:id="@+id/similarReplyButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="相近回复"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_similar"
+                            android:layout_marginBottom="12dp"/>
+
+                        <Button
+                            android:id="@+id/naturalReplyButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="自然回复"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_natural"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- 🔥 二次复盘按钮组 -->
+            <LinearLayout
+                android:id="@+id/secondReviewButtonsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="自然回复"
-                        android:textSize="16sp"
-                        android:textColor="#FFFFFF"
-                        android:background="@drawable/button_natural"/>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="🚀 继续训练"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#333333"
+                            android:layout_marginBottom="16dp"/>
+
+                        <Button
+                            android:id="@+id/retryButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="再来一次"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_same"
+                            android:layout_marginBottom="12dp"/>
+
+                        <Button
+                            android:id="@+id/changeCharacterButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="选择其他对象"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_similar"
+                            android:layout_marginBottom="12dp"/>
+
+                        <Button
+                            android:id="@+id/moreChallengesButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="56dp"
+                            android:text="更多挑战"
+                            android:textSize="16sp"
+                            android:textColor="#FFFFFF"
+                            android:background="@drawable/button_natural"/>
+                    </LinearLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

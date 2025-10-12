@@ -1,4 +1,7 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/viewmodel/ChatViewModel.kt
+// 文件类型：Kotlin Class (ViewModel)
+// 修改内容：在所有创建Message的地方添加characterCount参数
+
 package com.example.nativechatdemo.viewmodel
 
 import android.app.Application
@@ -10,263 +13,239 @@ import com.example.nativechatdemo.data.model.Character
 import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.FavorPoint
 import com.example.nativechatdemo.data.model.Message
-import com.example.nativechatdemo.data.model.User
-import com.example.nativechatdemo.utils.FavorAnalyzer
 import com.example.nativechatdemo.utils.MockAIService
-import com.example.nativechatdemo.utils.TextAnalyzer
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
-import org.json.JSONObject
+import java.util.*
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
     private val database = AppDatabase.getDatabase(application)
     private val messageDao = database.messageDao()
     private val conversationDao = database.conversationDao()
-    private val userDao = database.userDao()
-
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
-    val messages: StateFlow<List<Message>> = _messages.asStateFlow()
-
-    private val _isTyping = MutableStateFlow(false)
-    val isTyping: StateFlow<Boolean> = _isTyping.asStateFlow()
 
     private val _conversation = MutableStateFlow<Conversation?>(null)
-    val conversation: StateFlow<Conversation?> = _conversation.asStateFlow()
+    val conversation: StateFlow<Conversation?> = _conversation
 
-    private val _user = MutableStateFlow<User?>(null)
-    val user: StateFlow<User?> = _user.asStateFlow()
+    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    val messages: StateFlow<List<Message>> = _messages
 
     private val _favorPoints = MutableStateFlow<List<FavorPoint>>(emptyList())
-    val favorPoints: StateFlow<List<FavorPoint>> = _favorPoints.asStateFlow()
+    val favorPoints: StateFlow<List<FavorPoint>> = _favorPoints
 
-    private var currentCharacter: Character? = null
+    private var userId: String = ""
+    private var character: Character? = null
+    private var replayMode: String? = null
+    private var originalConversationId: String? = null
+    private var originalMessages: List<Message> = emptyList()
 
-    fun initChat(userId: String, character: Character) {
-        currentCharacter = character
+    fun initChat(
+        userId: String,
+        character: Character,
+        replayMode: String? = null,
+        originalConversationId: String? = null
+    ) {
+        this.userId = userId
+        this.character = character
+        this.replayMode = replayMode
+        this.originalConversationId = originalConversationId
+
+        Log.d("ChatViewModel", "initChat - replayMode: $replayMode, originalConversationId: $originalConversationId")
 
         viewModelScope.launch {
-            try {
-                val user = withContext(Dispatchers.IO) {
-                    userDao.getUserById(userId)
-                } ?: User(
-                    id = userId,
-                    username = "测试用户",
-                    credits = 100,
-                    userLevel = 1,
-                    createdAt = System.currentTimeMillis()
-                )
-                _user.value = user
-
-                val conversation = Conversation(
-                    id = "conv_${System.currentTimeMillis()}",
-                    userId = userId,
-                    characterId = character.id,
-                    characterName = character.name,
-                    currentFavorability = 10,
-                    actualRounds = 0,
-                    status = "active",
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                )
-
-                withContext(Dispatchers.IO) {
-                    try {
-                        conversationDao.insertConversation(conversation)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+            if (replayMode != null && originalConversationId != null) {
+                originalMessages = withContext(Dispatchers.IO) {
+                    messageDao.getMessagesByConversationId(originalConversationId)
                 }
-
-                _conversation.value = conversation
-
-                val initialPoint = FavorPoint(
-                    round = 0,
-                    favor = 10,
-                    messageId = "",
-                    reason = "",
-                    timestamp = System.currentTimeMillis(),
-                    favorChange = 0
-                )
-                _favorPoints.value = listOf(initialPoint)
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-
-                _user.value = User(
-                    id = userId,
-                    username = "测试用户",
-                    credits = 100,
-                    userLevel = 1,
-                    createdAt = System.currentTimeMillis()
-                )
-
-                _conversation.value = Conversation(
-                    id = "conv_${System.currentTimeMillis()}",
-                    userId = userId,
-                    characterId = character.id,
-                    characterName = character.name,
-                    currentFavorability = 10,
-                    actualRounds = 0,
-                    status = "active",
-                    createdAt = System.currentTimeMillis(),
-                    updatedAt = System.currentTimeMillis()
-                )
-
-                val initialPoint = FavorPoint(
-                    round = 0,
-                    favor = 10,
-                    messageId = "",
-                    reason = "",
-                    timestamp = System.currentTimeMillis(),
-                    favorChange = 0
-                )
-                _favorPoints.value = listOf(initialPoint)
+                Log.d("ChatViewModel", "加载原对话消息数: ${originalMessages.size}")
             }
+
+            val newConversation = Conversation(
+                id = UUID.randomUUID().toString(),
+                userId = userId,
+                characterId = character.id,
+                characterName = character.name,
+                currentFavorability = 50,
+                actualRounds = 0,
+                status = "active",
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                moduleType = "basic",
+                reviewMode = replayMode,
+                originalConversationId = originalConversationId
+            )
+
+            withContext(Dispatchers.IO) {
+                conversationDao.insertConversation(newConversation)
+            }
+
+            _conversation.value = newConversation
+
+            val welcomeContent = generateWelcomeMessage(character.name)
+            val welcomeMessage = Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = newConversation.id,
+                content = welcomeContent,
+                isUser = false,
+                timestamp = System.currentTimeMillis(),
+                characterCount = welcomeContent.length,  // 🔥 添加
+                favorChange = null
+            )
+
+            withContext(Dispatchers.IO) {
+                messageDao.insertMessage(welcomeMessage)
+            }
+
+            _messages.value = listOf(welcomeMessage)
+
+            val initialPoint = FavorPoint(
+                round = 0,
+                favor = 50,
+                messageId = welcomeMessage.id,
+                reason = "",
+                timestamp = System.currentTimeMillis(),
+                favorChange = 0
+            )
+            _favorPoints.value = listOf(initialPoint)
+        }
+    }
+
+    private fun generateWelcomeMessage(name: String): String {
+        return when {
+            name.contains("温柔") -> "你好~很高兴认识你呢"
+            name.contains("活泼") -> "嗨！终于等到你啦！"
+            name.contains("优雅") || name.contains("高冷") -> "你好，认识你很高兴。"
+            name.contains("阳光") -> "嘿！你好呀~"
+            else -> "你好~"
         }
     }
 
     fun sendMessage(content: String) {
-        val currentConv = _conversation.value ?: return
-        val currentUser = _user.value ?: return
-        val character = currentCharacter ?: return
-
-        if (currentUser.credits <= 0) {
-            return
-        }
-
         viewModelScope.launch {
-            try {
-                val userMessage = Message(
-                    id = "msg_${System.currentTimeMillis()}",
-                    conversationId = currentConv.id,
-                    content = content,
-                    isUser = true,
-                    timestamp = System.currentTimeMillis(),
-                    characterCount = content.length
-                )
+            val currentConv = _conversation.value ?: return@launch
+            val currentRound = currentConv.actualRounds
 
-                _messages.value = _messages.value + userMessage
+            Log.d("ChatViewModel", "发送消息，当前轮数: $currentRound")
 
-                withContext(Dispatchers.IO) {
-                    try {
-                        messageDao.insertMessage(userMessage)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                _isTyping.value = true
-
-                val updatedUser = currentUser.copy(credits = currentUser.credits - 1)
-
-                withContext(Dispatchers.IO) {
-                    try {
-                        userDao.updateUser(updatedUser)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-                _user.value = updatedUser
-
-                val aiResponseRaw = withContext(Dispatchers.IO) {
-                    MockAIService.generateResponse(
-                        userInput = content,
-                        characterId = character.id,
-                        currentRound = currentConv.actualRounds + 1,
-                        conversationHistory = _messages.value,
-                        currentFavorability = currentConv.currentFavorability
-                    )
-                }
-
-                val favorChange = FavorAnalyzer.parse(aiResponseRaw.message)
-                val cleanMessage = FavorAnalyzer.extractCleanMessage(aiResponseRaw.message)
-
-                Log.d("ChatViewModel", "AI原始回复: ${aiResponseRaw.message}")
-                Log.d("ChatViewModel", "解析好感变化: $favorChange")
-                Log.d("ChatViewModel", "清理后消息: $cleanMessage")
-
-                val aiMessage = Message(
-                    id = "msg_${System.currentTimeMillis() + 1}",
-                    conversationId = currentConv.id,
-                    content = cleanMessage,
-                    isUser = false,
-                    timestamp = aiResponseRaw.responseTime,
-                    characterCount = cleanMessage.length,
-                    favorChange = favorChange?.value
-                )
-
-                _messages.value = _messages.value + aiMessage
-
-                withContext(Dispatchers.IO) {
-                    try {
-                        messageDao.insertMessage(aiMessage)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                val newFavorability = (currentConv.currentFavorability + (favorChange?.value ?: aiResponseRaw.favorabilityChange)).coerceIn(0, 100)
-                val newRounds = currentConv.actualRounds + 1
-
-                // 修改：每轮都添加柱子
-                val newPoint = FavorPoint(
-                    round = newRounds,
-                    favor = newFavorability,
-                    messageId = aiMessage.id,
-                    reason = if (favorChange != null && favorChange.isPeak) favorChange.reason else "",
-                    timestamp = System.currentTimeMillis(),
-                    favorChange = favorChange?.value ?: 0
-                )
-                _favorPoints.value = _favorPoints.value + newPoint
-
-                Log.d("ChatViewModel", "添加好感点: round=$newRounds, favor=$newFavorability, change=${favorChange?.value ?: 0}, reason=${newPoint.reason}")
-
-                // 保存好感线数据到数据库
-                val favorPointsJson = JSONArray().apply {
-                    _favorPoints.value.forEach { point ->
-                        put(JSONObject().apply {
-                            put("round", point.round)
-                            put("favor", point.favor)
-                            put("messageId", point.messageId)
-                            put("reason", point.reason)
-                            put("timestamp", point.timestamp)
-                            put("favorChange", point.favorChange)
-                        })
-                    }
-                }.toString()
-
-                val updatedConv = currentConv.copy(
-                    currentFavorability = newFavorability,
-                    actualRounds = newRounds,
-                    updatedAt = System.currentTimeMillis(),
-                    favorPoints = favorPointsJson
-                )
-
-                withContext(Dispatchers.IO) {
-                    try {
-                        conversationDao.updateConversation(updatedConv)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
-
-                _conversation.value = updatedConv
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _isTyping.value = false
+            if (currentRound >= 45) {
+                Log.w("ChatViewModel", "已达轮数上限45轮")
+                return@launch
             }
+
+            val userMessage = Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = currentConv.id,
+                content = content,
+                isUser = true,
+                timestamp = System.currentTimeMillis(),
+                characterCount = content.length,  // 🔥 添加
+                favorChange = null
+            )
+
+            withContext(Dispatchers.IO) {
+                messageDao.insertMessage(userMessage)
+            }
+
+            _messages.value = _messages.value + userMessage
+
+            delay(800)
+
+            val currentMessages = _messages.value
+
+            val aiResponse = if (replayMode != null) {
+                MockAIService.generateReplayResponse(
+                    userInput = content,
+                    characterId = currentConv.characterId,
+                    currentRound = currentRound + 1,
+                    conversationHistory = currentMessages,
+                    currentFavorability = currentConv.currentFavorability,
+                    replayMode = replayMode!!,
+                    originalMessages = originalMessages,
+                    currentRoundIndex = currentRound
+                )
+            } else {
+                MockAIService.generateResponse(
+                    userInput = content,
+                    characterId = currentConv.characterId,
+                    currentRound = currentRound + 1,
+                    conversationHistory = currentMessages,
+                    currentFavorability = currentConv.currentFavorability
+                )
+            }
+
+            val favorChange = aiResponse.favorabilityChange
+            val newFavorability = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
+
+            val aiMessage = Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = currentConv.id,
+                content = aiResponse.message,
+                isUser = false,
+                timestamp = System.currentTimeMillis(),
+                characterCount = aiResponse.message.length,  // 🔥 添加
+                favorChange = favorChange
+            )
+
+            withContext(Dispatchers.IO) {
+                messageDao.insertMessage(aiMessage)
+            }
+
+            _messages.value = _messages.value + aiMessage
+
+            val newRound = currentRound + 1
+            val reason = extractReasonFromMessage(aiResponse.message)
+
+            val newPoint = FavorPoint(
+                round = newRound,
+                favor = newFavorability,
+                messageId = aiMessage.id,
+                reason = reason,
+                timestamp = System.currentTimeMillis(),
+                favorChange = favorChange
+            )
+
+            _favorPoints.value = _favorPoints.value + newPoint
+
+            val updatedConversation = currentConv.copy(
+                currentFavorability = newFavorability,
+                actualRounds = newRound,
+                updatedAt = System.currentTimeMillis(),
+                favorPoints = convertFavorPointsToJson(_favorPoints.value)
+            )
+
+            withContext(Dispatchers.IO) {
+                conversationDao.updateConversation(updatedConversation)
+            }
+
+            _conversation.value = updatedConversation
+
+            Log.d("ChatViewModel", "消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
         }
     }
 
-    fun getEffectiveRounds(): Int {
-        return 45
+    private fun extractReasonFromMessage(message: String): String {
+        val regex = """\[FAVOR[_PEAK]*:[+\-]?\d+:(.*?)]""".toRegex()
+        val matchResult = regex.find(message)
+        return matchResult?.groupValues?.get(1) ?: ""
+    }
+
+    private fun convertFavorPointsToJson(points: List<FavorPoint>): String {
+        val jsonArray = JSONArray()
+        points.forEach { point ->
+            val jsonObject = org.json.JSONObject()
+            jsonObject.put("round", point.round)
+            jsonObject.put("favor", point.favor)
+            jsonObject.put("messageId", point.messageId)
+            jsonObject.put("reason", point.reason)
+            jsonObject.put("timestamp", point.timestamp)
+            jsonObject.put("favorChange", point.favorChange)
+            jsonArray.put(jsonObject)
+        }
+        return jsonArray.toString()
     }
 }

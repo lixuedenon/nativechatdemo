@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/AndroidManifest.xml -->
+<!-- 文件类型：Android Manifest 配置文件 -->
+
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -31,6 +34,21 @@
         <!-- 复盘页面 -->
         <activity
             android:name=".ui.review.ReviewActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- 社交雷达菜单页 -->
+        <activity
+            android:name=".ui.radar.RadarMenuActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- 社交雷达学习模式页 -->
+        <activity
+            android:name=".ui.radar.RadarLearnActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+
+        <!-- 社交雷达练习模式页 -->
+        <activity
+            android:name=".ui.radar.RadarPracticeActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
         <!-- 主页 -->

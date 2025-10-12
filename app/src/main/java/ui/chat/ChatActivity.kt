@@ -1,6 +1,6 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/ui/chat/ChatActivity.kt
 // 文件类型：Kotlin Class (Activity)
-// 修改内容：修改45轮到达时的处理逻辑，改为进入复盘页而不是finish()
+// 修改内容：支持复盘模式（replayMode），对话结束时判断进入首次或二次复盘
 
 package com.example.nativechatdemo.ui.chat
 
@@ -42,6 +42,9 @@ class ChatActivity : AppCompatActivity() {
     private lateinit var roundsText: TextView
 
     private var currentCharacter: Character? = null
+    private var gender: String = ""  // 🔥 新增
+    private var replayMode: String? = null  // 🔥 新增
+    private var originalConversationId: String? = null  // 🔥 新增
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +53,14 @@ class ChatActivity : AppCompatActivity() {
         val userId = intent.getStringExtra("userId") ?: return finish()
         val characterId = intent.getStringExtra("characterId") ?: return finish()
         val characterName = intent.getStringExtra("characterName") ?: "AI"
+
+        // 🔥 接收新参数
+        gender = intent.getStringExtra("gender") ?: ""
+        replayMode = intent.getStringExtra("replayMode")
+        originalConversationId = intent.getStringExtra("originalConversationId")
+
+        Log.d("ChatActivity", "replayMode: $replayMode")
+        Log.d("ChatActivity", "originalConversationId: $originalConversationId")
 
         val character = Character(
             id = characterId,
@@ -69,7 +80,10 @@ class ChatActivity : AppCompatActivity() {
         supportActionBar?.title = characterName
 
         initViews()
-        viewModel.initChat(userId, character)
+
+        // 🔥 传递replayMode和originalConversationId给ViewModel
+        viewModel.initChat(userId, character, replayMode, originalConversationId)
+
         observeData()
         setupInput()
         setupKeyboardHandling()
@@ -144,9 +158,21 @@ class ChatActivity : AppCompatActivity() {
         intent.putExtra("userId", conversation?.userId)
         intent.putExtra("characterId", character?.id)
         intent.putExtra("characterName", character?.name)
+        intent.putExtra("gender", gender)
         intent.putExtra("finalFavor", conversation?.currentFavorability)
         intent.putExtra("totalRounds", conversation?.actualRounds)
         intent.putExtra("favorPoints", conversation?.favorPoints)
+
+        // 🔥 判断是首次复盘还是二次复盘
+        if (replayMode != null) {
+            // 如果有replayMode，说明这是二次对话，进入二次复盘
+            intent.putExtra("reviewType", "second")
+            intent.putExtra("replayMode", replayMode)
+            intent.putExtra("originalConversationId", originalConversationId)
+        } else {
+            // 否则是首次对话，进入首次复盘
+            intent.putExtra("reviewType", "first")
+        }
 
         startActivity(intent)
         finish()
@@ -295,13 +321,12 @@ class ChatActivity : AppCompatActivity() {
             if (conversation.actualRounds >= 45) {
                 Log.d("ChatActivity", "已达45轮上限，进入复盘页面")
 
-                // 🔥 修改：改为进入复盘页面，而不是直接finish()
                 AlertDialog.Builder(this)
                     .setTitle("对话结束")
                     .setMessage("本次对话已达到45轮上限\n\n最终好感度: ${conversation.currentFavorability}%")
                     .setPositiveButton("进入复盘") { dialog, _ ->
                         dialog.dismiss()
-                        startReviewActivity()  // 进入复盘页
+                        startReviewActivity()
                     }
                     .setCancelable(false)
                     .show()

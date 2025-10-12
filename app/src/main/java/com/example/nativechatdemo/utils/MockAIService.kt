@@ -1,6 +1,6 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/utils/MockAIService.kt
 // 文件类型：Kotlin Object
-// 修改内容：增加详细日志用于调试
+// 修改内容：修复消息遍历逻辑，使用动态查找配对
 
 package com.example.nativechatdemo.utils
 
@@ -14,7 +14,7 @@ object MockAIService {
     private const val TAG = "MockAIService"
 
     /**
-     * 生成AI回复（保持原有功能）
+     * 生成AI回复（正常模式）
      */
     fun generateResponse(
         userInput: String,
@@ -48,7 +48,210 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成对话分析
+     * 🔥 生成复盘模式的AI回复
+     */
+    fun generateReplayResponse(
+        userInput: String,
+        characterId: String,
+        currentRound: Int,
+        conversationHistory: List<Message>,
+        currentFavorability: Int,
+        replayMode: String,
+        originalMessages: List<Message>,
+        currentRoundIndex: Int
+    ): AIResponse {
+        Log.d(TAG, "复盘模式: $replayMode, 当前轮次: $currentRound")
+
+        return when (replayMode) {
+            "same" -> generateSameReply(
+                characterId,
+                currentRound,
+                currentFavorability,
+                originalMessages,
+                currentRoundIndex
+            )
+            "similar" -> generateSimilarReply(
+                userInput,
+                characterId,
+                currentRound,
+                currentFavorability,
+                originalMessages,
+                currentRoundIndex
+            )
+            "natural" -> generateNaturalReply(
+                userInput,
+                characterId,
+                currentRound,
+                conversationHistory,
+                currentFavorability,
+                originalMessages,
+                currentRoundIndex
+            )
+            else -> generateResponse(userInput, characterId, currentRound, conversationHistory, currentFavorability)
+        }
+    }
+
+    /**
+     * 相同回复模式：完全重复原对话的AI回复
+     */
+    private fun generateSameReply(
+        characterId: String,
+        currentRound: Int,
+        currentFavorability: Int,
+        originalMessages: List<Message>,
+        currentRoundIndex: Int
+    ): AIResponse {
+        val originalAiMessageIndex = (currentRoundIndex + 1) * 2
+
+        val originalAiMessage = if (originalAiMessageIndex < originalMessages.size) {
+            originalMessages[originalAiMessageIndex]
+        } else {
+            null
+        }
+
+        return if (originalAiMessage != null && !originalAiMessage.isUser) {
+            val favorChange = originalAiMessage.favorChange ?: 0
+
+            AIResponse(
+                message = originalAiMessage.content,
+                favorabilityChange = favorChange,
+                responseTime = System.currentTimeMillis()
+            )
+        } else {
+            Log.w(TAG, "找不到原对话的AI消息，使用默认回复")
+            generateDefaultReply(characterId, currentRound, currentFavorability)
+        }
+    }
+
+    /**
+     * 相近回复模式：引导回到原话题，但用不同的表达
+     */
+    private fun generateSimilarReply(
+        userInput: String,
+        characterId: String,
+        currentRound: Int,
+        currentFavorability: Int,
+        originalMessages: List<Message>,
+        currentRoundIndex: Int
+    ): AIResponse {
+        val originalUserMessageIndex = currentRoundIndex * 2
+
+        val originalUserMessage = if (originalUserMessageIndex < originalMessages.size) {
+            originalMessages[originalUserMessageIndex].content
+        } else {
+            null
+        }
+
+        val isOnTopic = originalUserMessage?.let {
+            userInput.contains(it.take(5)) || it.contains(userInput.take(5))
+        } ?: false
+
+        val favorChange = if (isOnTopic) {
+            (2..8).random()
+        } else {
+            (-2..5).random()
+        }
+
+        val newFavorability = (currentFavorability + favorChange).coerceIn(0, 100)
+
+        val responseContent = if (isOnTopic) {
+            getResponseContent(characterId, currentRound, favorChange)
+        } else {
+            val guideResponses = listOf(
+                "嗯...对了，刚才我们说到哪了？",
+                "诶，我们换个话题吧，聊聊${originalUserMessage?.take(10) ?: "之前的话题"}？",
+                "哈哈，突然想起来${originalUserMessage?.take(10) ?: "刚才的事"}~"
+            )
+            guideResponses.random()
+        }
+
+        val isPeak = shouldTriggerPeak(currentFavorability, newFavorability, favorChange)
+        val reason = if (isPeak) {
+            if (isOnTopic) "你成功回到了主题" else "话题有点分散"
+        } else {
+            ""
+        }
+
+        val tag = if (isPeak) "FAVOR_PEAK" else "FAVOR"
+        val sign = if (favorChange >= 0) "+" else ""
+        val message = "$responseContent [$tag:$sign$favorChange:$reason]"
+
+        return AIResponse(
+            message = message,
+            favorabilityChange = favorChange,
+            responseTime = System.currentTimeMillis()
+        )
+    }
+
+    /**
+     * 自然回复模式：自由发挥，但会适时提及原话题
+     */
+    private fun generateNaturalReply(
+        userInput: String,
+        characterId: String,
+        currentRound: Int,
+        conversationHistory: List<Message>,
+        currentFavorability: Int,
+        originalMessages: List<Message>,
+        currentRoundIndex: Int
+    ): AIResponse {
+        val shouldMentionOriginal = (1..100).random() <= 20
+
+        val favorChange = (-3..8).random()
+        val newFavorability = (currentFavorability + favorChange).coerceIn(0, 100)
+
+        val responseContent = if (shouldMentionOriginal && originalMessages.isNotEmpty()) {
+            val randomOriginalMsg = originalMessages.filter { !it.isUser }.randomOrNull()
+            val originalTopic = randomOriginalMsg?.content?.take(15) ?: ""
+
+            val mentionResponses = listOf(
+                "${getResponseContent(characterId, currentRound, favorChange)} 对了，$originalTopic",
+                "嗯嗯~话说回来，$originalTopic",
+                "${getResponseContent(characterId, currentRound, favorChange)} 突然想起$originalTopic"
+            )
+            mentionResponses.random()
+        } else {
+            getResponseContent(characterId, currentRound, favorChange)
+        }
+
+        val isPeak = shouldTriggerPeak(currentFavorability, newFavorability, favorChange)
+        val reason = if (isPeak) {
+            getReasonForChange(favorChange, newFavorability, currentFavorability)
+        } else {
+            ""
+        }
+
+        val tag = if (isPeak) "FAVOR_PEAK" else "FAVOR"
+        val sign = if (favorChange >= 0) "+" else ""
+        val message = "$responseContent [$tag:$sign$favorChange:$reason]"
+
+        return AIResponse(
+            message = message,
+            favorabilityChange = favorChange,
+            responseTime = System.currentTimeMillis()
+        )
+    }
+
+    /**
+     * 默认回复（当找不到原消息时）
+     */
+    private fun generateDefaultReply(
+        characterId: String,
+        currentRound: Int,
+        currentFavorability: Int
+    ): AIResponse {
+        val favorChange = (0..5).random()
+        val responseContent = getResponseContent(characterId, currentRound, favorChange)
+
+        return AIResponse(
+            message = "$responseContent [FAVOR:+$favorChange:]",
+            favorabilityChange = favorChange,
+            responseTime = System.currentTimeMillis()
+        )
+    }
+
+    /**
+     * 🔥 生成首次对话分析（修复：动态寻找配对）
      */
     fun generateAnalysis(
         messages: List<Message>,
@@ -57,77 +260,153 @@ object MockAIService {
     ): String {
         Log.d(TAG, "=== generateAnalysis 开始 ===")
         Log.d(TAG, "输入消息数: ${messages.size}")
-        Log.d(TAG, "角色名称: $characterName")
-        Log.d(TAG, "最终好感度: $finalFavor")
-
-        // 🔥 测试阶段：不过滤，显示所有对话
-        val effectiveMessages = messages
-
-        Log.d(TAG, "有效消息数（不过滤）: ${effectiveMessages.size}")
 
         val analysisArray = mutableListOf<String>()
 
         var round = 1
         var i = 0
 
-        Log.d(TAG, "开始遍历消息...")
-
-        while (i < effectiveMessages.size - 1) {
-            val userMsg = effectiveMessages[i]
-            val aiMsg = effectiveMessages[i + 1]
-
-            Log.d(TAG, "检查位置[$i] 和 [${i+1}]:")
-            Log.d(TAG, "  [$i] isUser=${userMsg.isUser}, content='${userMsg.content}'")
-            Log.d(TAG, "  [${i+1}] isUser=${aiMsg.isUser}, content='${aiMsg.content}'")
-
-            if (userMsg.isUser && !aiMsg.isUser) {
-                Log.d(TAG, "  ✅ 匹配！这是第${round}轮对话")
-
-                val analysis = generateSingleAnalysis(
-                    round = round,
-                    userMessage = userMsg.content,
-                    aiMessage = aiMsg.content,
-                    favorChange = aiMsg.favorChange ?: 0,
-                    characterName = characterName
-                )
-                analysisArray.add(analysis)
-                Log.d(TAG, "  ✅ 第${round}轮分析已生成")
-                round++
-            } else {
-                Log.d(TAG, "  ❌ 不匹配，跳过")
+        while (i < messages.size) {
+            // 跳过欢迎消息（第一条非用户消息）
+            if (i == 0 && !messages[i].isUser) {
+                i++
+                continue
             }
 
-            i += 2
+            val currentMsg = messages[i]
+
+            // 如果当前是用户消息，找下一条AI消息
+            if (currentMsg.isUser) {
+                // 向后查找第一条AI消息
+                var aiMsgIndex = i + 1
+                while (aiMsgIndex < messages.size && messages[aiMsgIndex].isUser) {
+                    aiMsgIndex++
+                }
+
+                if (aiMsgIndex < messages.size) {
+                    val aiMsg = messages[aiMsgIndex]
+
+                    Log.d(TAG, "✅ 匹配第${round}轮: user='${currentMsg.content}', ai='${aiMsg.content}'")
+
+                    val analysis = generateSingleAnalysis(
+                        round = round,
+                        userMessage = currentMsg.content,
+                        aiMessage = aiMsg.content,
+                        favorChange = aiMsg.favorChange ?: 0,
+                        characterName = characterName
+                    )
+                    analysisArray.add(analysis)
+                    round++
+
+                    // 跳到AI消息的下一条
+                    i = aiMsgIndex + 1
+                } else {
+                    i++
+                }
+            } else {
+                // 如果当前是AI消息，跳过
+                i++
+            }
         }
 
         Log.d(TAG, "遍历完成！最终生成了 ${analysisArray.size} 轮分析")
 
-        val result = "[${analysisArray.joinToString(",")}]"
-        Log.d(TAG, "返回JSON长度: ${result.length}")
-
-        return result
+        return "[${analysisArray.joinToString(",")}]"
     }
 
     /**
-     * 过滤无效对话（测试阶段不使用）
+     * 🔥 生成二次复盘分析（修复：动态寻找配对）
      */
-    private fun filterEffectiveMessages(messages: List<Message>): List<Message> {
-        val ineffectivePatterns = listOf(
-            "你好", "您好", "hi", "hello", "嗨",
-            "再见", "拜拜", "bye", "886",
-            "嗯", "哦", "啊", "呃",
-            "谢谢", "多谢", "感谢",
-            "在吗", "在不在"
-        )
+    fun generateSecondReviewAnalysis(
+        currentMessages: List<Message>,
+        originalMessages: List<Message>,
+        characterName: String,
+        finalFavor: Int
+    ): String {
+        Log.d(TAG, "=== generateSecondReviewAnalysis 开始 ===")
+        Log.d(TAG, "当前消息数: ${currentMessages.size}, 原消息数: ${originalMessages.size}")
 
-        return messages.filter { message ->
-            val content = message.content.trim().lowercase()
-            content.length > 3 && !ineffectivePatterns.any { content.contains(it) }
+        val analysisArray = mutableListOf<String>()
+
+        var round = 1
+        var i = 0
+
+        while (i < currentMessages.size) {
+            // 跳过欢迎消息
+            if (i == 0 && !currentMessages[i].isUser) {
+                i++
+                continue
+            }
+
+            val currentMsg = currentMessages[i]
+
+            if (currentMsg.isUser) {
+                // 向后查找第一条AI消息
+                var aiMsgIndex = i + 1
+                while (aiMsgIndex < currentMessages.size && currentMessages[aiMsgIndex].isUser) {
+                    aiMsgIndex++
+                }
+
+                if (aiMsgIndex < currentMessages.size) {
+                    val aiMsg = currentMessages[aiMsgIndex]
+
+                    // 找对应的原对话（也用动态查找）
+                    val originalUserMsg = findOriginalUserMessage(originalMessages, round)
+
+                    val analysis = generateSecondSingleAnalysis(
+                        round = round,
+                        userMessage = currentMsg.content,
+                        aiMessage = aiMsg.content,
+                        originalUserMessage = originalUserMsg?.content,
+                        favorChange = aiMsg.favorChange ?: 0,
+                        characterName = characterName
+                    )
+                    analysisArray.add(analysis)
+                    round++
+
+                    i = aiMsgIndex + 1
+                } else {
+                    i++
+                }
+            } else {
+                i++
+            }
         }
+
+        Log.d(TAG, "遍历完成！最终生成了 ${analysisArray.size} 轮分析")
+
+        return "[${analysisArray.joinToString(",")}]"
     }
 
     /**
-     * 生成单轮对话的分析
+     * 🔥 查找原对话中第n轮的用户消息
+     */
+    private fun findOriginalUserMessage(messages: List<Message>, targetRound: Int): Message? {
+        var round = 1
+        var i = 0
+
+        while (i < messages.size) {
+            if (i == 0 && !messages[i].isUser) {
+                i++
+                continue
+            }
+
+            val currentMsg = messages[i]
+
+            if (currentMsg.isUser) {
+                if (round == targetRound) {
+                    return currentMsg
+                }
+                round++
+            }
+            i++
+        }
+
+        return null
+    }
+
+    /**
+     * 生成单轮对话的分析（首次复盘）
      */
     private fun generateSingleAnalysis(
         round: Int,
@@ -136,8 +415,6 @@ object MockAIService {
         favorChange: Int,
         characterName: String
     ): String {
-        Log.d(TAG, "    生成第${round}轮的分析文本...")
-
         val analysis = generateAnalysisText(userMessage, favorChange)
         val suggestion = generateSuggestionText(userMessage, favorChange, characterName)
 
@@ -153,7 +430,32 @@ object MockAIService {
     }
 
     /**
-     * 生成分析文本
+     * 🔥 生成单轮对话的分析（二次复盘 - 更友好）
+     */
+    private fun generateSecondSingleAnalysis(
+        round: Int,
+        userMessage: String,
+        aiMessage: String,
+        originalUserMessage: String?,
+        favorChange: Int,
+        characterName: String
+    ): String {
+        val analysis = generateSecondAnalysisText(userMessage, originalUserMessage, favorChange)
+        val suggestion = generateSecondSuggestionText(userMessage, favorChange)
+
+        return """
+        {
+            "round": $round,
+            "userMessage": "${escapeJson(userMessage)}",
+            "aiMessage": "${escapeJson(aiMessage)}",
+            "analysis": "${escapeJson(analysis)}",
+            "suggestion": "${escapeJson(suggestion)}"
+        }
+        """.trimIndent()
+    }
+
+    /**
+     * 生成分析文本（首次复盘）
      */
     private fun generateAnalysisText(userMessage: String, favorChange: Int): String {
         return when {
@@ -211,7 +513,75 @@ object MockAIService {
     }
 
     /**
-     * 生成建议文本
+     * 🔥 生成分析文本（二次复盘 - 更友好，多夸奖）
+     */
+    private fun generateSecondAnalysisText(
+        userMessage: String,
+        originalUserMessage: String?,
+        favorChange: Int
+    ): String {
+        val isImproved = originalUserMessage?.let { userMessage != it } ?: true
+
+        val baseAnalysis = when {
+            favorChange >= 5 -> {
+                listOf(
+                    "👏 太棒了！这次回答非常出色！",
+                    "🎉 完美的回复！你的进步很明显！",
+                    "✨ 说得非常好！这就是高情商的表现！"
+                ).random()
+            }
+            favorChange in 1..4 -> {
+                listOf(
+                    "😊 不错哦！这个回答挺好的！",
+                    "👍 做得好！这样回答是对的！",
+                    "💪 很棒！继续保持这个水平！"
+                ).random()
+            }
+            favorChange == 0 -> {
+                listOf(
+                    "🤔 这个回答还可以，但可以更好！",
+                    "💭 嗯...这样回答也不错，试试别的方式？",
+                    "📚 不错的尝试，我们来看看更好的方式！"
+                ).random()
+            }
+            else -> {
+                listOf(
+                    "😅 这次稍微有点偏差，没关系，我们调整一下！",
+                    "🎯 离目标还有一点距离，再优化一下！",
+                    "💡 换个角度试试，效果会更好！"
+                ).random()
+            }
+        }
+
+        val improvement = if (isImproved && originalUserMessage != null) {
+            "相比第一次（$originalUserMessage），这次你做了调整，"
+        } else {
+            ""
+        }
+
+        return "$baseAnalysis $improvement${getPositiveReason(userMessage, favorChange)}"
+    }
+
+    /**
+     * 🔥 获取积极的原因解释
+     */
+    private fun getPositiveReason(userMessage: String, favorChange: Int): String {
+        return when {
+            userMessage.contains("?") || userMessage.contains("？") ->
+                "通过提问引导对话，展现了你的关注！"
+            userMessage.contains("喜欢") || userMessage.contains("爱") ->
+                "表达了真挚的情感，很有感染力！"
+            userMessage.length > 20 ->
+                "回答得很详细，显示出你的用心！"
+            userMessage.contains("哈") || userMessage.contains("笑") ->
+                "幽默感满分，氛围很好！"
+            else ->
+                "这样的表达方式很自然，对方会感到舒服！"
+        }
+    }
+
+    /**
+     * 生成建议文本（首次复盘）
      */
     private fun generateSuggestionText(
         userMessage: String,
@@ -243,7 +613,51 @@ object MockAIService {
     }
 
     /**
-     * 生成更好的回复示例
+     * 🔥 生成建议文本（二次复盘 - 提供更好的替代示例）
+     */
+    private fun generateSecondSuggestionText(
+        userMessage: String,
+        favorChange: Int
+    ): String {
+        return when {
+            favorChange >= 5 -> {
+                val alt1 = generateAlternativeReply(userMessage, "humorous")
+                val alt2 = generateAlternativeReply(userMessage, "caring")
+                val alt3 = generateAlternativeReply(userMessage, "playful")
+                val alternatives = listOf(
+                    "你还可以这样说：$alt1，增加一点幽默感！",
+                    "换个说法也不错：$alt2，更显关怀！",
+                    "或者试试：$alt3，俏皮一点也很好！"
+                )
+                "💡 ${alternatives.random()}"
+            }
+            favorChange in 1..4 -> {
+                val alt1 = generateAlternativeReply(userMessage, "deeper")
+                val alt2 = generateAlternativeReply(userMessage, "emotional")
+                val alt3 = generateAlternativeReply(userMessage, "creative")
+                val alternatives = listOf(
+                    "试试这样说：$alt1，会更有深度！",
+                    "这样表达可能更好：$alt2，情感更饱满！",
+                    "换个角度：$alt3，更有创意！"
+                )
+                "💡 ${alternatives.random()}"
+            }
+            else -> {
+                val alt1 = generateAlternativeReply(userMessage, "positive")
+                val alt2 = generateAlternativeReply(userMessage, "gentle")
+                val alt3 = generateAlternativeReply(userMessage, "engaging")
+                val alternatives = listOf(
+                    "不如这样说：$alt1，更积极正面！",
+                    "建议改成：$alt2，语气更温和！",
+                    "这样可能更好：$alt3，更有吸引力！"
+                )
+                "💡 ${alternatives.random()}"
+            }
+        }
+    }
+
+    /**
+     * 生成更好的回复示例（首次复盘用）
      */
     private fun generateBetterReply(original: String, type: String): String {
         return when (type) {
@@ -253,6 +667,24 @@ object MockAIService {
             "improve" -> "是啊，而且我觉得...（表达自己的观点）"
             "safe" -> "你说得对，我也这么认为。"
             else -> "好的，我明白了。"
+        }
+    }
+
+    /**
+     * 🔥 生成替代回复示例（二次复盘用 - 更具体、更实用）
+     */
+    private fun generateAlternativeReply(original: String, style: String): String {
+        return when (style) {
+            "humorous" -> "哈哈，${original}！你这么说我都忍不住笑了~"
+            "caring" -> "${original}，你要照顾好自己哦~"
+            "playful" -> "嘿嘿，${original}！你猜我会怎么做？"
+            "deeper" -> "${original}，这让我想到一个有趣的问题..."
+            "emotional" -> "真的吗？${original}！我特别能理解这种感觉！"
+            "creative" -> "${original}，不过换个角度看，是不是也可以..."
+            "positive" -> "${original}，而且这样还能..."
+            "gentle" -> "嗯嗯，${original}呢~"
+            "engaging" -> "${original}！对了，你有没有..."
+            else -> original
         }
     }
 
