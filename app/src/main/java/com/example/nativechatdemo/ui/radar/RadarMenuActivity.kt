@@ -9,39 +9,37 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
 import com.example.nativechatdemo.R
+import com.example.nativechatdemo.ui.conversation.ConversationLearnActivity
+import com.example.nativechatdemo.ui.conversation.ConversationPracticeActivity
 
 class RadarMenuActivity : AppCompatActivity() {
 
-    private var targetGender: String = "female" // 默认女生（男生篇）
+    private var targetGender: String = "female"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_radar_menu)
 
-        // 获取目标性别（从模块列表页传入）
         targetGender = intent.getStringExtra("targetGender") ?: "female"
 
-        // 设置Toolbar
         val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        toolbar.title = "社交雷达"
         toolbar.setNavigationOnClickListener {
             finish()
         }
 
-        // 根据目标性别设置标题
-        toolbar.title = if (targetGender == "female") "社交雷达 - 与女生" else "社交雷达 - 与男生"
-
-        // 学习模式按钮
+        // 学习模式
         findViewById<CardView>(R.id.learnModeCard).setOnClickListener {
-            val intent = Intent(this, RadarLearnActivity::class.java)
+            val intent = Intent(this, ConversationLearnActivity::class.java)
             intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
 
-        // 练习模式按钮
+        // 练习模式
         findViewById<CardView>(R.id.practiceModeCard).setOnClickListener {
-            val intent = Intent(this, RadarPracticeActivity::class.java)
+            val intent = Intent(this, ConversationPracticeActivity::class.java)
             intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }

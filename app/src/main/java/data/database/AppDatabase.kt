@@ -14,16 +14,14 @@ import com.example.nativechatdemo.data.dao.MessageDao
 import com.example.nativechatdemo.data.dao.UserDao
 import com.example.nativechatdemo.data.dao.CharacterDao
 import com.example.nativechatdemo.data.dao.ConversationAnalysisDao
-import com.example.nativechatdemo.data.dao.RadarScenarioDao
-import com.example.nativechatdemo.data.dao.RadarProgressDao
+import com.example.nativechatdemo.data.dao.ConversationScenarioDao
 import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.Message
 import com.example.nativechatdemo.data.model.User
 import com.example.nativechatdemo.data.model.Character
 import com.example.nativechatdemo.data.model.ConversationAnalysis
-import com.example.nativechatdemo.data.model.RadarScenario
-import com.example.nativechatdemo.data.model.RadarProgress
-import com.example.nativechatdemo.utils.MockRadarService
+import com.example.nativechatdemo.data.model.ConversationScenario
+import com.example.nativechatdemo.utils.MockConversationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -36,10 +34,9 @@ import kotlinx.coroutines.launch
         Conversation::class,
         Character::class,
         ConversationAnalysis::class,
-        RadarScenario::class,
-        RadarProgress::class
+        ConversationScenario::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,8 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun conversationDao(): ConversationDao
     abstract fun characterDao(): CharacterDao
     abstract fun conversationAnalysisDao(): ConversationAnalysisDao
-    abstract fun radarScenarioDao(): RadarScenarioDao
-    abstract fun radarProgressDao(): RadarProgressDao
+    abstract fun conversationScenarioDao(): ConversationScenarioDao
 
     companion object {
         private const val TAG = "AppDatabase"
@@ -102,48 +98,37 @@ abstract class AppDatabase : RoomDatabase() {
             isInitializing = true
 
             try {
-                Log.d(TAG, "========== 开始检查场景数据 ==========")
+                Log.d(TAG, "========== 开始检查对话场景数据 ==========")
 
-                val radarDao = database.radarScenarioDao()
-                val femaleLearnScenarios = radarDao.getScenariosByTypeAndGender("learn", "female")
-                val maleLearnScenarios = radarDao.getScenariosByTypeAndGender("learn", "male")
-                val femalePracticeScenarios = radarDao.getScenariosByTypeAndGender("practice", "female")
-                val malePracticeScenarios = radarDao.getScenariosByTypeAndGender("practice", "male")
+                val conversationDao = database.conversationScenarioDao()
+                val scenarios = conversationDao.getScenariosByGender("male")
 
-                Log.d(TAG, "女生学习场景: " + femaleLearnScenarios.size)
-                Log.d(TAG, "男生学习场景: " + maleLearnScenarios.size)
-                Log.d(TAG, "女生练习场景: " + femalePracticeScenarios.size)
-                Log.d(TAG, "男生练习场景: " + malePracticeScenarios.size)
+                Log.d(TAG, "现有对话场景数量: ${scenarios.size}")
 
-                val totalScenarios = femaleLearnScenarios.size + maleLearnScenarios.size +
-                                   femalePracticeScenarios.size + malePracticeScenarios.size
-
-                if (totalScenarios == 0) {
+                if (scenarios.isEmpty()) {
                     Log.w(TAG, "⚠️ 场景数据为空，开始生成和插入...")
 
-                    val scenarios = MockRadarService.generateAllScenarios()
-                    Log.d(TAG, "生成的场景总数: " + scenarios.size)
+                    val newScenarios = MockConversationService.generateAllScenarios()
+                    Log.d(TAG, "生成的场景总数: ${newScenarios.size}")
 
-                    if (scenarios.isEmpty()) {
-                        Log.e(TAG, "❌ MockRadarService 返回空列表！")
+                    if (newScenarios.isEmpty()) {
+                        Log.e(TAG, "❌ MockConversationService 返回空列表！")
                     } else {
-                        scenarios.forEachIndexed { index, scenario ->
-                            Log.d(TAG, "场景[" + index + "]: id=" + scenario.id + ", type=" + scenario.type + ", gender=" + scenario.targetGender)
+                        newScenarios.forEachIndexed { index, scenario ->
+                            Log.d(TAG, "场景[$index]: id=${scenario.id}, title=${scenario.title}, gender=${scenario.targetGender}")
                         }
 
                         Log.d(TAG, "开始插入场景数据...")
-                        radarDao.insertScenarios(scenarios)
+                        conversationDao.insertScenarios(newScenarios)
                         Log.d(TAG, "✅ 场景数据插入完成")
 
                         delay(200)
-                        val verifyCount = radarDao.getScenariosByTypeAndGender("learn", "female").size +
-                                        radarDao.getScenariosByTypeAndGender("learn", "male").size +
-                                        radarDao.getScenariosByTypeAndGender("practice", "female").size +
-                                        radarDao.getScenariosByTypeAndGender("practice", "male").size
-                        Log.d(TAG, "验证插入结果 - 总场景数: " + verifyCount)
+                        val verifyCount = conversationDao.getScenariosByGender("male").size +
+                                        conversationDao.getScenariosByGender("female").size
+                        Log.d(TAG, "验证插入结果 - 总场景数: $verifyCount")
                     }
                 } else {
-                    Log.d(TAG, "✅ 场景数据已存在，总数: " + totalScenarios)
+                    Log.d(TAG, "✅ 场景数据已存在")
                 }
 
             } catch (e: Exception) {
@@ -167,7 +152,7 @@ abstract class AppDatabase : RoomDatabase() {
                         try {
                             populateDatabase(
                                 database.characterDao(),
-                                database.radarScenarioDao()
+                                database.conversationScenarioDao()
                             )
                         } catch (e: Exception) {
                             Log.e(TAG, "❌ populateDatabase 失败", e)
@@ -185,7 +170,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         private suspend fun populateDatabase(
             characterDao: CharacterDao,
-            radarScenarioDao: RadarScenarioDao
+            conversationScenarioDao: ConversationScenarioDao
         ) {
             Log.d(TAG, "========== populateDatabase 开始 ==========")
 
@@ -267,18 +252,18 @@ abstract class AppDatabase : RoomDatabase() {
 
                 Log.d(TAG, "开始插入角色...")
                 characterDao.insertCharacters(characters)
-                Log.d(TAG, "✅ 角色插入完成，数量: " + characters.size)
+                Log.d(TAG, "✅ 角色插入完成，数量: ${characters.size}")
 
-                Log.d(TAG, "开始生成场景...")
-                val radarScenarios = MockRadarService.generateAllScenarios()
-                Log.d(TAG, "生成场景数量: " + radarScenarios.size)
+                Log.d(TAG, "开始生成对话场景...")
+                val conversationScenarios = MockConversationService.generateAllScenarios()
+                Log.d(TAG, "生成对话场景数量: ${conversationScenarios.size}")
 
-                if (radarScenarios.isEmpty()) {
-                    Log.e(TAG, "❌ 警告：MockRadarService 返回空列表！")
+                if (conversationScenarios.isEmpty()) {
+                    Log.e(TAG, "❌ 警告：MockConversationService 返回空列表！")
                 } else {
-                    Log.d(TAG, "开始插入场景...")
-                    radarScenarioDao.insertScenarios(radarScenarios)
-                    Log.d(TAG, "✅ 场景插入完成")
+                    Log.d(TAG, "开始插入对话场景...")
+                    conversationScenarioDao.insertScenarios(conversationScenarios)
+                    Log.d(TAG, "✅ 对话场景插入完成")
                 }
 
             } catch (e: Exception) {

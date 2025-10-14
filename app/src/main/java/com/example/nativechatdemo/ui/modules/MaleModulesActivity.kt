@@ -1,5 +1,4 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/ui/modules/MaleModulesActivity.kt
-// 文件类型：Kotlin Class (Activity)
 
 package com.example.nativechatdemo.ui.modules
 
@@ -15,6 +14,8 @@ import com.example.nativechatdemo.ui.radar.RadarMenuActivity
 
 class MaleModulesActivity : AppCompatActivity() {
 
+    private val targetGender = "female"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_male_modules)
@@ -26,32 +27,28 @@ class MaleModulesActivity : AppCompatActivity() {
             finish()
         }
 
-        // 基础对话 - 已启用
+        // 基础对话
         findViewById<CardView>(R.id.basicChatCard).setOnClickListener {
             val intent = Intent(this, CharacterSelectionActivity::class.java)
-            intent.putExtra("gender", "female")  // 男生篇：和女生聊天
+            intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
 
-        // 女友养成 - 敬请期待
-        findViewById<CardView>(R.id.girlfriendTrainingCard).setOnClickListener {
-            showComingSoon("女友养成")
-        }
-
-        // 定制女友 - 敬请期待
-        findViewById<CardView>(R.id.customGirlfriendCard).setOnClickListener {
-            showComingSoon("定制女友")
-        }
-
-        // 社交雷达 - 已启用 ✅
+        // 社交雷达 ✅ 正确的ID是 radarCard
         findViewById<CardView>(R.id.radarCard).setOnClickListener {
             val intent = Intent(this, RadarMenuActivity::class.java)
-            intent.putExtra("targetGender", "female")  // 男生篇：分析女生
+            intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
-    }
 
-    private fun showComingSoon(moduleName: String) {
-        Toast.makeText(this, "$moduleName 功能正在开发中，敬请期待！", Toast.LENGTH_SHORT).show()
+        // 女友养成（未开发）
+        findViewById<CardView>(R.id.girlfriendTrainingCard).setOnClickListener {
+            Toast.makeText(this, "女友养成模块开发中", Toast.LENGTH_SHORT).show()
+        }
+
+        // 定制女友（未开发）
+        findViewById<CardView>(R.id.customGirlfriendCard).setOnClickListener {
+            Toast.makeText(this, "定制女友模块开发中", Toast.LENGTH_SHORT).show()
+        }
     }
 }

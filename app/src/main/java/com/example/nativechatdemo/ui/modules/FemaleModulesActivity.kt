@@ -1,5 +1,4 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/ui/modules/FemaleModulesActivity.kt
-// 文件类型：Kotlin Class (Activity)
 
 package com.example.nativechatdemo.ui.modules
 
@@ -15,6 +14,8 @@ import com.example.nativechatdemo.ui.radar.RadarMenuActivity
 
 class FemaleModulesActivity : AppCompatActivity() {
 
+    private val targetGender = "male"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_female_modules)
@@ -26,37 +27,33 @@ class FemaleModulesActivity : AppCompatActivity() {
             finish()
         }
 
-        // 基础对话 - 已启用
+        // 基础对话
         findViewById<CardView>(R.id.basicChatCard).setOnClickListener {
             val intent = Intent(this, CharacterSelectionActivity::class.java)
-            intent.putExtra("gender", "male")  // 女生篇：和男生聊天
+            intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
 
-        // 男友养成 - 敬请期待
-        findViewById<CardView>(R.id.boyfriendTrainingCard).setOnClickListener {
-            showComingSoon("男友养成")
-        }
-
-        // 定制男友 - 敬请期待
-        findViewById<CardView>(R.id.customBoyfriendCard).setOnClickListener {
-            showComingSoon("定制男友")
-        }
-
-        // 社交雷达 - 已启用 ✅
+        // 社交雷达 ✅ 正确的ID是 radarCard
         findViewById<CardView>(R.id.radarCard).setOnClickListener {
             val intent = Intent(this, RadarMenuActivity::class.java)
-            intent.putExtra("targetGender", "male")  // 女生篇：分析男生
+            intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
 
-        // 反PUA - 敬请期待
-        findViewById<CardView>(R.id.antiPuaCard).setOnClickListener {
-            showComingSoon("反PUA")
+        // 男友养成（未开发）
+        findViewById<CardView>(R.id.boyfriendTrainingCard).setOnClickListener {
+            Toast.makeText(this, "男友养成模块开发中", Toast.LENGTH_SHORT).show()
         }
-    }
 
-    private fun showComingSoon(moduleName: String) {
-        Toast.makeText(this, "$moduleName 功能正在开发中，敬请期待！", Toast.LENGTH_SHORT).show()
+        // 定制男友（未开发）
+        findViewById<CardView>(R.id.customBoyfriendCard).setOnClickListener {
+            Toast.makeText(this, "定制男友模块开发中", Toast.LENGTH_SHORT).show()
+        }
+
+        // 反PUA（未开发）
+        findViewById<CardView>(R.id.antiPuaCard).setOnClickListener {
+            Toast.makeText(this, "反PUA模块开发中", Toast.LENGTH_SHORT).show()
+        }
     }
 }

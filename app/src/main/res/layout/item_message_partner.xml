@@ -1,0 +1,25 @@
+<!-- 文件路径：app/src/main/res/layout/item_message_partner.xml -->
+<!-- 文件类型：XML Layout -->
+
+<!-- 对方的消息（左边） -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/messageText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxWidth="260dp"
+        android:background="@drawable/bg_message_ai"
+        android:padding="12dp"
+        android:textSize="16sp"
+        android:textColor="#FF333333" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

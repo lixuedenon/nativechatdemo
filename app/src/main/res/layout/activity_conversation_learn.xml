@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/layout/activity_conversation_learn.xml -->
+<!-- 文件类型：XML Layout -->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFAFAFA">
+
+    <!-- Toolbar -->
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="#FF6200EE"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 说明页 -->
+    <LinearLayout
+        android:id="@+id/introLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="24dp"
+        android:visibility="visible"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <TextView
+            android:id="@+id/introTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="欢迎来到学习模式"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FF333333"
+            android:gravity="center"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/introDesc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="学习模式说明"
+            android:textSize="16sp"
+            android:textColor="#FF666666"
+            android:lineSpacingExtra="8dp" />
+
+        <Button
+            android:id="@+id/startButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="开始学习"
+            android:textSize="16sp"
+            android:layout_marginTop="32dp" />
+    </LinearLayout>
+
+    <!-- 对话页 -->
+    <LinearLayout
+        android:id="@+id/conversationLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/toolbar"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- 场景标题 -->
+        <TextView
+            android:id="@+id/scenarioTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:text="场景：初次见面聊天"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:textColor="#FF333333"
+            android:background="#FFF3F3F3" />
+
+        <!-- 对话容器（ScrollView） -->
+        <ScrollView
+            android:id="@+id/conversationScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:padding="16dp"
+            android:background="#FFFFFFFF">
+
+            <LinearLayout
+                android:id="@+id/conversationContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </ScrollView>
+
+        <!-- 底部按钮 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:background="#FFFFFFFF"
+            android:elevation="4dp">
+
+            <Button
+                android:id="@+id/nextButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="下一句"
+                android:textSize="16sp" />
+
+            <Button
+                android:id="@+id/finishButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:text="学习完成"
+                android:textSize="16sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

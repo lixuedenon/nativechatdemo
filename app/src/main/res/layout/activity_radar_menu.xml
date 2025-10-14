@@ -1,133 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 文件路径：app/src/main/res/layout/activity_radar_menu.xml -->
+<!-- 文件类型：XML Layout -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FAFAFA">
+    android:orientation="vertical"
+    android:background="#FFF5F5F5">
 
+    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        app:title="社交雷达"
-        app:titleTextColor="#FFFFFF"
-        app:navigationIcon="?attr/homeAsUpIndicator"
-        app:layout_constraintTop_toTopOf="parent"/>
+        android:background="#FF6200EE"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar" />
 
-    <TextView
-        android:id="@+id/subtitleText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="选择你的学习方式"
-        android:textSize="16sp"
-        android:textColor="#666666"
-        android:layout_marginTop="32dp"
-        app:layout_constraintTop_toBottomOf="@id/toolbar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="24dp"
-        app:layout_constraintTop_toBottomOf="@id/subtitleText"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-        <!-- 学习模式 -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/learnModeCard"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="24dp"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="6dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <!-- 标题 -->
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="28dp"
-                android:gravity="center">
+                android:text="选择训练模式"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#FF333333"
+                android:gravity="center"
+                android:layout_marginBottom="24dp" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="📚"
-                    android:textSize="56sp"
-                    android:layout_marginBottom="12dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="学习模式"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:layout_marginBottom="8dp"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="AI演示对话，标注雷区，\n帮你识别社交中的隐藏信号"
-                    android:textSize="14sp"
-                    android:textColor="#999999"
-                    android:gravity="center"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
-
-        <!-- 练习模式 -->
-        <androidx.cardview.widget.CardView
-            android:id="@+id/practiceModeCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="6dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:foreground="?attr/selectableItemBackground">
-
-            <LinearLayout
+            <!-- 学习模式 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/learnModeCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="28dp"
-                android:gravity="center">
+                android:layout_marginBottom="16dp"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="✍️"
-                    android:textSize="56sp"
-                    android:layout_marginBottom="12dp"/>
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="📚 学习模式"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF333333" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="观看完整对话示范，学习正确的回答方式"
+                        android:textSize="14sp"
+                        android:textColor="#FF666666" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- 练习模式 -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/practiceModeCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="12dp"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="练习模式"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    android:textColor="#333333"
-                    android:layout_marginBottom="8dp"/>
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="4选1选择题，\n判断哪句话更合适，积累实战经验"
-                    android:textSize="14sp"
-                    android:textColor="#999999"
-                    android:gravity="center"/>
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="🎯 练习模式"
+                        android:textSize="20sp"
+                        android:textStyle="bold"
+                        android:textColor="#FF333333" />
 
-    </LinearLayout>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="实战练习，自己选择回答并获得评分"
+                        android:textSize="14sp"
+                        android:textColor="#FF666666" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
