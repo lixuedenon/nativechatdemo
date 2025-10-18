@@ -1,6 +1,6 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/viewmodel/ChatViewModel.kt
 // 文件类型：Kotlin Class (ViewModel)
-// 修改内容：在所有创建Message的地方添加characterCount参数
+// 修改内容：修复续命逻辑，防止事件重复触发导致崩溃
 
 package com.example.nativechatdemo.viewmodel
 
@@ -14,6 +14,7 @@ import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.FavorPoint
 import com.example.nativechatdemo.data.model.Message
 import com.example.nativechatdemo.utils.MockAIService
+import com.example.nativechatdemo.utils.TrainingStoryConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,31 +39,53 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _favorPoints = MutableStateFlow<List<FavorPoint>>(emptyList())
     val favorPoints: StateFlow<List<FavorPoint>> = _favorPoints
 
+    // 养成模式结束事件
+    private val _trainingEndingEvent = MutableStateFlow<TrainingEndingEvent?>(null)
+    val trainingEndingEvent: StateFlow<TrainingEndingEvent?> = _trainingEndingEvent
+
     private var userId: String = ""
     private var character: Character? = null
     private var replayMode: String? = null
     private var originalConversationId: String? = null
     private var originalMessages: List<Message> = emptyList()
+    private var moduleType: String = "basic"
+
+    companion object {
+        private const val TAG = "ChatViewModel"
+    }
+
+    data class TrainingEndingEvent(
+        val type: String  // "revive" 或 "final"
+    )
 
     fun initChat(
         userId: String,
         character: Character,
         replayMode: String? = null,
-        originalConversationId: String? = null
+        originalConversationId: String? = null,
+        moduleType: String = "basic"
     ) {
         this.userId = userId
         this.character = character
         this.replayMode = replayMode
         this.originalConversationId = originalConversationId
+        this.moduleType = moduleType
 
-        Log.d("ChatViewModel", "initChat - replayMode: $replayMode, originalConversationId: $originalConversationId")
+        Log.d(TAG, "initChat - moduleType: $moduleType, replayMode: $replayMode")
 
         viewModelScope.launch {
             if (replayMode != null && originalConversationId != null) {
                 originalMessages = withContext(Dispatchers.IO) {
                     messageDao.getMessagesByConversationId(originalConversationId)
                 }
-                Log.d("ChatViewModel", "加载原对话消息数: ${originalMessages.size}")
+                Log.d(TAG, "加载原对话消息数: ${originalMessages.size}")
+            }
+
+            val isTraining = moduleType == "training"
+            val endingType = if (isTraining) {
+                TrainingStoryConfig.getRandomEndingType().name.lowercase()
+            } else {
+                null
             }
 
             val newConversation = Conversation(
@@ -75,9 +98,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 status = "active",
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis(),
-                moduleType = "basic",
+                moduleType = moduleType,
                 reviewMode = replayMode,
-                originalConversationId = originalConversationId
+                originalConversationId = originalConversationId,
+                isTrainingMode = isTraining,
+                trainingEndingType = endingType,
+                reviveCount = 0,
+                totalTrainingRounds = 0
             )
 
             withContext(Dispatchers.IO) {
@@ -93,7 +120,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 content = welcomeContent,
                 isUser = false,
                 timestamp = System.currentTimeMillis(),
-                characterCount = welcomeContent.length,  // 🔥 添加
+                characterCount = welcomeContent.length,
                 favorChange = null
             )
 
@@ -130,10 +157,11 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val currentConv = _conversation.value ?: return@launch
             val currentRound = currentConv.actualRounds
 
-            Log.d("ChatViewModel", "发送消息，当前轮数: $currentRound")
+            Log.d(TAG, "发送消息，当前轮数: $currentRound, 模块类型: ${currentConv.moduleType}")
 
-            if (currentRound >= 45) {
-                Log.w("ChatViewModel", "已达轮数上限45轮")
+            // 基础对话模式：检查45轮上限
+            if (!currentConv.isTrainingMode && currentRound >= 45) {
+                Log.w(TAG, "已达轮数上限45轮")
                 return@launch
             }
 
@@ -143,7 +171,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 content = content,
                 isUser = true,
                 timestamp = System.currentTimeMillis(),
-                characterCount = content.length,  // 🔥 添加
+                characterCount = content.length,
                 favorChange = null
             )
 
@@ -157,7 +185,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             val currentMessages = _messages.value
 
-            val aiResponse = if (replayMode != null) {
+            // 生成AI回复（养成模式需要特殊处理）
+            val aiResponse = if (currentConv.isTrainingMode) {
+                generateTrainingModeResponse(currentConv, content, currentMessages, currentRound + 1)
+            } else if (replayMode != null) {
                 MockAIService.generateReplayResponse(
                     userInput = content,
                     characterId = currentConv.characterId,
@@ -187,7 +218,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 content = aiResponse.message,
                 isUser = false,
                 timestamp = System.currentTimeMillis(),
-                characterCount = aiResponse.message.length,  // 🔥 添加
+                characterCount = aiResponse.message.length,
                 favorChange = favorChange
             )
 
@@ -215,7 +246,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 currentFavorability = newFavorability,
                 actualRounds = newRound,
                 updatedAt = System.currentTimeMillis(),
-                favorPoints = convertFavorPointsToJson(_favorPoints.value)
+                favorPoints = convertFavorPointsToJson(_favorPoints.value),
+                totalTrainingRounds = if (currentConv.isTrainingMode) newRound else 0
             )
 
             withContext(Dispatchers.IO) {
@@ -224,8 +256,148 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             _conversation.value = updatedConversation
 
-            Log.d("ChatViewModel", "消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
+            // 养成模式：检查是否触发结束
+            if (currentConv.isTrainingMode) {
+                checkTrainingEnding(updatedConversation)
+            }
+
+            Log.d(TAG, "消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
         }
+    }
+
+    /**
+     * 生成养成模式的AI回复
+     */
+    private fun generateTrainingModeResponse(
+        conversation: Conversation,
+        userInput: String,
+        history: List<Message>,
+        nextRound: Int
+    ): com.example.nativechatdemo.data.model.AIResponse {
+        val shouldIntroduceEnding = shouldIntroduceEnding(nextRound)
+
+        // 如果到了引入结束话题的轮次
+        if (shouldIntroduceEnding) {
+            return generateEndingIntroResponse(conversation, nextRound)
+        }
+
+        // 否则正常生成回复
+        return MockAIService.generateResponse(
+            userInput = userInput,
+            characterId = conversation.characterId,
+            currentRound = nextRound,
+            conversationHistory = history,
+            currentFavorability = conversation.currentFavorability
+        )
+    }
+
+    /**
+     * 判断是否应该引入结束话题
+     */
+    private fun shouldIntroduceEnding(rounds: Int): Boolean {
+        return rounds == 20 || rounds == 45 || rounds == 70 || rounds == 95
+    }
+
+    /**
+     * 生成引入结束话题的回复
+     */
+    private fun generateEndingIntroResponse(
+        conversation: Conversation,
+        rounds: Int
+    ): com.example.nativechatdemo.data.model.AIResponse {
+        val endingType = TrainingStoryConfig.EndingType.valueOf(conversation.trainingEndingType?.uppercase() ?: "SICK")
+
+        val message = when (endingType) {
+            TrainingStoryConfig.EndingType.SICK -> {
+                when (rounds) {
+                    20 -> "对了...其实我最近身体不太舒服，去医院检查了一下... [FAVOR:+3:关心的话题]"
+                    45 -> "医生说我的病情有点严重...可能需要很长时间治疗... [FAVOR:+2:沉重的话题]"
+                    70 -> "我真的很珍惜和你在一起的时光...虽然不知道还能陪你多久... [FAVOR:+5:真挚的情感]"
+                    95 -> "我可能...真的撑不了太久了...但能认识你，是我最幸运的事... [FAVOR:+8:深情告白]"
+                    else -> "嗯... [FAVOR:+1:]"
+                }
+            }
+            TrainingStoryConfig.EndingType.TIMETRAVEL -> {
+                when (rounds) {
+                    20 -> "我有件事一直没告诉你...其实我不属于这个时空... [FAVOR:+3:神秘的秘密]"
+                    45 -> "时空裂缝开始出现了...我可能随时会被召回原来的世界... [FAVOR:+2:担忧的预感]"
+                    70 -> "每次和你在一起，我都在和命运抗争...但我不想离开你... [FAVOR:+5:坚定的决心]"
+                    95 -> "时空裂缝越来越大了...我真的要回去了...但我永远不会忘记你... [FAVOR:+8:不舍的告别]"
+                    else -> "嗯... [FAVOR:+1:]"
+                }
+            }
+        }
+
+        return com.example.nativechatdemo.data.model.AIResponse(
+            message = message,
+            favorabilityChange = if (rounds >= 90) 8 else if (rounds >= 60) 5 else 3,
+            responseTime = System.currentTimeMillis()
+        )
+    }
+
+    /**
+     * 检查养成模式是否触发结束
+     * ✅ 修复：防止事件重复触发
+     */
+    private fun checkTrainingEnding(conversation: Conversation) {
+        val rounds = conversation.actualRounds
+
+        // 每25轮触发一次结束判断
+        if (rounds % 25 == 0) {
+            // ✅ 关键修复：先检查当前是否已经有事件在处理
+            if (_trainingEndingEvent.value != null) {
+                Log.d(TAG, "已有结束事件在处理中，跳过")
+                return
+            }
+
+            if (conversation.reviveCount < 3) {
+                // 还有续命机会
+                Log.d(TAG, "触发续命窗口，当前续命次数: ${conversation.reviveCount}")
+                _trainingEndingEvent.value = TrainingEndingEvent("revive")
+            } else {
+                // 已经续命3次，强制结束
+                Log.d(TAG, "已续命3次，强制结束")
+                _trainingEndingEvent.value = TrainingEndingEvent("final")
+            }
+
+            // ✅ 不要立即重置事件，等UI处理完再重置
+        }
+    }
+
+    /**
+     * 更新续命次数
+     * ✅ 修复：更新后立即重置事件
+     */
+    fun updateReviveCount(newCount: Int) {
+        viewModelScope.launch {
+            val currentConv = _conversation.value ?: return@launch
+
+            Log.d(TAG, "更新续命次数: ${currentConv.reviveCount} -> $newCount")
+
+            val updatedConv = currentConv.copy(
+                reviveCount = newCount,
+                updatedAt = System.currentTimeMillis()
+            )
+
+            withContext(Dispatchers.IO) {
+                conversationDao.updateConversation(updatedConv)
+            }
+
+            _conversation.value = updatedConv
+
+            // ✅ 关键修复：更新完续命次数后，立即重置事件
+            _trainingEndingEvent.value = null
+
+            Log.d(TAG, "续命次数已更新: $newCount，事件已重置")
+        }
+    }
+
+    /**
+     * ✅ 新增：重置训练事件（供UI调用）
+     */
+    fun resetTrainingEvent() {
+        _trainingEndingEvent.value = null
+        Log.d(TAG, "训练事件已手动重置")
     }
 
     private fun extractReasonFromMessage(message: String): String {

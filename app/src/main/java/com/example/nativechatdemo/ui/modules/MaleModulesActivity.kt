@@ -1,4 +1,6 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/ui/modules/MaleModulesActivity.kt
+// 文件类型：Kotlin Class (Activity)
+// 修改内容：修改"女友养成"按钮，跳转到角色选择页并传递moduleType参数
 
 package com.example.nativechatdemo.ui.modules
 
@@ -31,19 +33,24 @@ class MaleModulesActivity : AppCompatActivity() {
         findViewById<CardView>(R.id.basicChatCard).setOnClickListener {
             val intent = Intent(this, CharacterSelectionActivity::class.java)
             intent.putExtra("targetGender", targetGender)
+            intent.putExtra("gender", "male")  // 男生篇
+            intent.putExtra("moduleType", "basic")
             startActivity(intent)
         }
 
-        // 社交雷达 ✅ 正确的ID是 radarCard
+        // 社交雷达
         findViewById<CardView>(R.id.radarCard).setOnClickListener {
             val intent = Intent(this, RadarMenuActivity::class.java)
             intent.putExtra("targetGender", targetGender)
             startActivity(intent)
         }
 
-        // 女友养成（未开发）
+        // 女友养成（修改为跳转到角色选择）
         findViewById<CardView>(R.id.girlfriendTrainingCard).setOnClickListener {
-            Toast.makeText(this, "女友养成模块开发中", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, CharacterSelectionActivity::class.java)
+            intent.putExtra("gender", "male")  // 男生篇
+            intent.putExtra("moduleType", "training")  // 养成模式
+            startActivity(intent)
         }
 
         // 定制女友（未开发）

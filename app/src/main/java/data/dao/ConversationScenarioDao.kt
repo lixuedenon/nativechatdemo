@@ -1,5 +1,5 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/data/dao/ConversationScenarioDao.kt
-// 文件类型：Kotlin Interface (DAO)
+// 文件类型：Kotlin Interface (Room DAO)
 
 package com.example.nativechatdemo.data.dao
 
@@ -26,4 +26,7 @@ interface ConversationScenarioDao {
 
     @Query("DELETE FROM conversation_scenarios")
     suspend fun deleteAllScenarios()
+
+    @Query("SELECT COUNT(*) FROM conversation_scenarios")
+    suspend fun getCount(): Int
 }
