@@ -68,6 +68,18 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
+        <activity
+            android:name=".ui.custom.CustomPartnerMenuActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.custom.CustomTraitInputActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name=".ui.custom.ConfessionTestActivity"
+            android:screenOrientation="portrait" />
+
     </application>
 
 </manifest>

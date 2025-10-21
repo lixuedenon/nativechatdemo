@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用主题（如果已存在则保留） -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <!-- 无ActionBar主题（新增） -->
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+</resources>
+
+    <!-- 文件路径：app/src/main/res/values/styles.xml -->
+    <!-- 文件类型：XML Values -->
+    <!-- 文件状态：【修改】或【新建】 -->

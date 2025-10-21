@@ -1,3 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NativeChatDemo</string>
+
+    <!-- 定制模块相关 -->
+    <string name="trait_personality">性格</string>
+    <string name="trait_interests">兴趣爱好</string>
+    <string name="trait_emotion">情感特征</string>
+    <string name="trait_lifestyle">生活态度</string>
+    <string name="trait_social">社交特点</string>
+    <string name="trait_custom_description">补充描述（可选）</string>
+    <string name="trait_description_hint">输入更详细的性格描述...</string>
+    <string name="btn_random_generate">随机生成</string>
+    <string name="btn_start_chat">开始聊天</string>
+
+    <!-- 场景选择 -->
+    <string name="scenario_1_title">相识并初步了解</string>
+    <string name="scenario_1_desc">已经认识，了解对方性格</string>
+    <string name="scenario_2_title">刚刚相识并有初步了解</string>
+    <string name="scenario_2_desc">刚认识不久，了解部分特质</string>
+    <string name="scenario_3_title">尚未相识但有心仪目标</string>
+    <string name="scenario_3_desc">还没认识，但心中有理想型</string>
+    <string name="scenario_4_title">刚刚相识但不了解</string>
+    <string name="scenario_4_desc">刚认识，对对方一无所知</string>
+
+    <!-- 定制模块其他文本 -->
+    <string name="custom_partner_menu_title">请选择场景</string>
+    <string name="confession_test_title">告白成功率预测</string>
+    <string name="confession_rate_title">告白成功率</string>
+    <string name="analysis_result_title">分析结果</string>
+    <string name="suggestions_title">💡 建议</string>
+    <string name="back_to_chat">返回聊天</string>
+
+    <!-- 对话相关 -->
+    <string name="input_message_hint">输入消息...</string>
+    <string name="favorability_text">好感度: %d</string>
+    <string name="rounds_text">轮数: %d</string>
+    <string name="rounds_text_limit">轮数: %d/45</string>
 </resources>

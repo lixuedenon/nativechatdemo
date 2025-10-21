@@ -1,5 +1,7 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/data/database/AppDatabase.kt
 // 文件类型：Kotlin Abstract Class (Room Database)
+// 文件状态：【修改】
+// 修改内容：添加新的Entity和DAO，升级数据库版本
 
 package com.example.nativechatdemo.data.database
 
@@ -9,18 +11,8 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.nativechatdemo.data.dao.ConversationDao
-import com.example.nativechatdemo.data.dao.MessageDao
-import com.example.nativechatdemo.data.dao.UserDao
-import com.example.nativechatdemo.data.dao.CharacterDao
-import com.example.nativechatdemo.data.dao.ConversationAnalysisDao
-import com.example.nativechatdemo.data.dao.ConversationScenarioDao
-import com.example.nativechatdemo.data.model.Conversation
-import com.example.nativechatdemo.data.model.Message
-import com.example.nativechatdemo.data.model.User
-import com.example.nativechatdemo.data.model.Character
-import com.example.nativechatdemo.data.model.ConversationAnalysis
-import com.example.nativechatdemo.data.model.ConversationScenario
+import com.example.nativechatdemo.data.dao.*
+import com.example.nativechatdemo.data.model.*
 import com.example.nativechatdemo.utils.MockConversationService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -33,9 +25,11 @@ import kotlinx.coroutines.launch
         Conversation::class,
         Character::class,
         ConversationAnalysis::class,
-        ConversationScenario::class
+        ConversationScenario::class,
+        CustomPartnerTrait::class,    // 新增
+        ConfessionTest::class          // 新增
     ],
-    version = 7,
+    version = 8,  // 升级版本号
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -45,6 +39,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun characterDao(): CharacterDao
     abstract fun conversationAnalysisDao(): ConversationAnalysisDao
     abstract fun conversationScenarioDao(): ConversationScenarioDao
+    abstract fun customPartnerTraitDao(): CustomPartnerTraitDao  // 新增
+    abstract fun confessionTestDao(): ConfessionTestDao          // 新增
 
     companion object {
         private const val TAG = "AppDatabase"

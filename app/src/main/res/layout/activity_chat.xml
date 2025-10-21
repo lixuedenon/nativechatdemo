@@ -1,103 +1,124 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
-    <!-- 🔥 新增：顶部工具栏（带返回按钮）-->
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
-        android:elevation="4dp"
-        app:title="对话"
-        app:titleTextColor="#FFFFFF"
-        app:navigationIcon="?attr/homeAsUpIndicator"
-        app:layout_constraintTop_toTopOf="parent"/>
+    <!-- 文件路径：app/src/main/res/layout/activity_chat.xml -->
+    <!-- 文件类型：XML Layout -->
+    <!-- 文件状态：【修改】 -->
+    <!-- 修改内容：修复tint属性 -->
 
-    <!-- 状态栏 -->
     <LinearLayout
-        android:id="@+id/statusBar"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="#F5F5F5"
-        app:layout_constraintTop_toBottomOf="@id/toolbar">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/favorabilityText"
-            android:layout_width="0dp"
+        <!-- Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:titleTextColor="@android:color/white" />
+
+        <!-- 好感度显示区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="#F5F5F5">
+
+            <TextView
+                android:id="@+id/favorabilityText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="好感度: 50"
+                android:textSize="14sp"
+                android:textColor="@color/black" />
+
+            <TextView
+                android:id="@+id/roundsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="轮数: 0/45"
+                android:textSize="14sp"
+                android:textColor="@color/black" />
+
+        </LinearLayout>
+
+        <!-- 好感度曲线 -->
+        <HorizontalScrollView
+            android:id="@+id/favorScrollView"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:background="#FAFAFA"
+            android:scrollbars="none">
+
+            <com.example.nativechatdemo.custom.FavorLineView
+                android:id="@+id/favorLineView"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:padding="8dp" />
+
+        </HorizontalScrollView>
+
+        <!-- 对话列表 -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:text="好感度: 10"
-            android:textSize="14sp"
-            android:textColor="#333333"/>
+            android:padding="8dp" />
 
-        <TextView
-            android:id="@+id/roundsText"
-            android:layout_width="wrap_content"
+        <!-- 输入区域 -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="轮数: 0/0"
-            android:textSize="14sp"
-            android:textColor="#333333"/>
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:background="@color/white"
+            android:elevation="4dp">
+
+            <EditText
+                android:id="@+id/inputEditText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="输入消息..."
+                android:maxLength="50"
+                android:padding="12dp"
+                android:background="@drawable/bg_edit_text"
+                android:imeOptions="actionSend"
+                android:inputType="text" />
+
+            <ImageButton
+                android:id="@+id/sendButton"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginStart="8dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_send"
+                app:tint="@color/colorPrimary" />
+
+        </LinearLayout>
+
     </LinearLayout>
 
-    <!-- 好感线（支持横向滚动）-->
-    <HorizontalScrollView
-        android:id="@+id/favorScrollView"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:background="#FFFFFF"
-        android:scrollbars="none"
-        app:layout_constraintTop_toBottomOf="@id/statusBar">
-
-        <com.example.nativechatdemo.custom.FavorLineView
-            android:id="@+id/favorLineView"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"/>
-    </HorizontalScrollView>
-
-    <!-- 消息列表 -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="#FFFFFF"
-        app:layout_constraintTop_toBottomOf="@id/favorScrollView"
-        app:layout_constraintBottom_toTopOf="@id/inputLayout"/>
-
-    <!-- 输入框 -->
-    <LinearLayout
-        android:id="@+id/inputLayout"
-        android:layout_width="match_parent"
+    <!-- 告白按钮（定制模式专用） -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/confessionButton"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="#F5F5F5"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:layout_gravity="top|end"
+        android:layout_marginTop="120dp"
+        android:layout_marginEnd="16dp"
+        android:src="@drawable/ic_favorite"
+        android:visibility="gone"
+        app:backgroundTint="@color/pink"
+        app:fabSize="mini" />
 
-        <EditText
-            android:id="@+id/inputEditText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:hint="说点什么..."
-            android:maxLength="50"
-            android:imeOptions="actionSend"
-            android:inputType="text"
-            android:padding="12dp"
-            android:background="@android:color/white"/>
-
-        <ImageButton
-            android:id="@+id/sendButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:src="@android:drawable/ic_menu_send"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="发送"/>
-    </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

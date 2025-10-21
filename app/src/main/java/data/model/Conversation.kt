@@ -1,6 +1,7 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/data/model/Conversation.kt
 // 文件类型：Kotlin Data Class (Room Entity)
-// 修改内容：新增养成模式相关字段
+// 文件状态：【修改】
+// 修改内容：添加定制模式相关字段
 
 package com.example.nativechatdemo.data.model
 
@@ -20,7 +21,7 @@ data class Conversation(
     val updatedAt: Long,
 
     // 基础字段
-    val moduleType: String = "basic",           // 模块类型: basic/training/radar_learn/radar_practice
+    val moduleType: String = "basic",           // 模块类型: basic/training/radar_learn/radar_practice/custom
     val sceneType: String? = null,              // 场景类型: wechat/qq/cafe等
     val favorPoints: String? = null,            // 好感线数据JSON数组
     val reviewMode: String? = null,             // 复盘模式: same/similar/natural
@@ -35,5 +36,11 @@ data class Conversation(
     val isTrainingMode: Boolean = false,        // 是否养成模式
     val trainingEndingType: String? = null,     // 结束类型："sick"生病 | "timetravel"穿越
     val reviveCount: Int = 0,                   // 续命次数 0-3
-    val totalTrainingRounds: Int = 0            // 养成模式总轮数（用于判断结束）
+    val totalTrainingRounds: Int = 0,           // 养成模式总轮数（用于判断结束）
+
+    // 定制模式专用字段（新增）
+    val customScenarioType: Int = 0,            // 场景类型 1-4
+    val confessionButtonEnabled: Boolean = false,// 告白按钮是否可用
+    val customChatCount: Int = 0,               // 同特质聊天次数
+    val customTraitId: String? = null           // 关联的特质ID
 )
