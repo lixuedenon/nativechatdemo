@@ -1,8 +1,11 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/chat/MessageAdapter.kt
+
 package com.example.nativechatdemo.ui.chat
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -12,48 +15,92 @@ import com.example.nativechatdemo.data.model.Message
 
 class MessageAdapter : ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiffCallback()) {
 
+    var onMessageLongClick: ((Message, View) -> Unit)? = null
+
     companion object {
-        private const val VIEW_TYPE_USER = 1
-        private const val VIEW_TYPE_AI = 2
+        private const val VIEW_TYPE_SENT = 1
+        private const val VIEW_TYPE_RECEIVED = 2
     }
 
     override fun getItemViewType(position: Int): Int {
-        return if (getItem(position).isUser) VIEW_TYPE_USER else VIEW_TYPE_AI
+        val message = getItem(position)
+        return if (message.sender == "user") {
+            VIEW_TYPE_SENT
+        } else {
+            VIEW_TYPE_RECEIVED
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == VIEW_TYPE_USER) {
+        return if (viewType == VIEW_TYPE_SENT) {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_message_user, parent, false)
-            UserMessageViewHolder(view)
+                .inflate(R.layout.item_message_sent, parent, false)
+            SentMessageViewHolder(view)
         } else {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_message_ai, parent, false)
-            AIMessageViewHolder(view)
+                .inflate(R.layout.item_message_received, parent, false)
+            ReceivedMessageViewHolder(view)
         }
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = getItem(position)
+
         when (holder) {
-            is UserMessageViewHolder -> holder.bind(message)
-            is AIMessageViewHolder -> holder.bind(message)
+            is SentMessageViewHolder -> {
+                holder.bind(message)
+                holder.itemView.setOnLongClickListener {
+                    onMessageLongClick?.invoke(message, it)
+                    true
+                }
+            }
+            is ReceivedMessageViewHolder -> {
+                holder.bind(message)
+                holder.itemView.setOnLongClickListener {
+                    onMessageLongClick?.invoke(message, it)
+                    true
+                }
+            }
         }
     }
 
-    class UserMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class SentMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val messageText: TextView = itemView.findViewById(R.id.messageText)
+        private val quotedLayout: LinearLayout = itemView.findViewById(R.id.quotedLayout)
+        private val quotedSenderText: TextView = itemView.findViewById(R.id.quotedSenderText)
+        private val quotedContentText: TextView = itemView.findViewById(R.id.quotedContentText)
 
         fun bind(message: Message) {
             messageText.text = message.content
+
+            // 显示引用内容
+            if (message.quotedContent != null) {
+                quotedLayout.visibility = View.VISIBLE
+                quotedSenderText.text = if (message.quotedSender == "user") "你" else "对方"
+                quotedContentText.text = message.quotedContent
+            } else {
+                quotedLayout.visibility = View.GONE
+            }
         }
     }
 
-    class AIMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    class ReceivedMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val messageText: TextView = itemView.findViewById(R.id.messageText)
+        private val quotedLayout: LinearLayout = itemView.findViewById(R.id.quotedLayout)
+        private val quotedSenderText: TextView = itemView.findViewById(R.id.quotedSenderText)
+        private val quotedContentText: TextView = itemView.findViewById(R.id.quotedContentText)
 
         fun bind(message: Message) {
             messageText.text = message.content
+
+            // 显示引用内容
+            if (message.quotedContent != null) {
+                quotedLayout.visibility = View.VISIBLE
+                quotedSenderText.text = if (message.quotedSender == "user") "你" else "对方"
+                quotedContentText.text = message.quotedContent
+            } else {
+                quotedLayout.visibility = View.GONE
+            }
         }
     }
 

@@ -1,50 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/layout/activity_custom_partner_menu.xml -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="#F5F5F5">
 
-    <!-- 文件路径：app/src/main/res/layout/activity_custom_partner_menu.xml -->
-    <!-- 文件类型：XML Layout -->
-    <!-- 文件状态：【新建】 -->
-
+    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        app:titleTextColor="@android:color/white" />
+        app:titleTextColor="@android:color/white"
+        app:title="定制伴侣" />
 
+    <!-- 说明文字 -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:text="请选择你们的相识程度："
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:textStyle="bold" />
+
+    <!-- 场景卡片容器 -->
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="请选择场景"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/black"
-                android:layout_marginBottom="16dp" />
-
-            <!-- 场景1 -->
+            <!-- 场景1：相识并初步了解 -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/scenario1Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                android:foreground="?android:attr/selectableItemBackground">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -55,31 +55,31 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="相识并初步了解"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black" />
+                        android:text="场景1：相识并初步了解"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="已经认识，了解对方性格"
+                        android:layout_marginTop="8dp"
+                        android:text="已经认识，了解对方性格，但还未确立恋爱关系"
                         android:textSize="14sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_marginTop="4dp" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
+
             </androidx.cardview.widget.CardView>
 
-            <!-- 场景2 -->
+            <!-- 场景2：刚刚相识并有初步了解 -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/scenario2Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                android:foreground="?android:attr/selectableItemBackground">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -90,31 +90,31 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="刚刚相识并有初步了解"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black" />
+                        android:text="场景2：刚刚相识并有初步了解"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:text="刚认识不久，了解部分特质"
                         android:textSize="14sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_marginTop="4dp" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
+
             </androidx.cardview.widget.CardView>
 
-            <!-- 场景3 -->
+            <!-- 场景3：尚未相识但有心仪目标 -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/scenario3Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                android:foreground="?android:attr/selectableItemBackground">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -125,31 +125,31 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="尚未相识但有心仪目标"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black" />
+                        android:text="场景3：尚未相识但有心仪目标"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         android:text="还没认识，但心中有理想型"
                         android:textSize="14sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_marginTop="4dp" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
+
             </androidx.cardview.widget.CardView>
 
-            <!-- 场景4 -->
+            <!-- 场景4：刚刚相识但不了解 -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/scenario4Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="12dp"
+                android:layout_marginBottom="16dp"
                 app:cardCornerRadius="8dp"
-                app:cardElevation="4dp"
-                android:foreground="?android:attr/selectableItemBackground">
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -160,22 +160,25 @@
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="刚刚相识但不了解"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/black" />
+                        android:text="场景4：刚刚相识但不了解"
+                        android:textSize="18sp"
+                        android:textColor="@color/black"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="刚认识，对对方一无所知"
+                        android:layout_marginTop="8dp"
+                        android:text="刚认识，对对方一无所知（将随机生成特质）"
                         android:textSize="14sp"
-                        android:textColor="@android:color/darker_gray"
-                        android:layout_marginTop="4dp" />
+                        android:textColor="#666666" />
 
                 </LinearLayout>
+
             </androidx.cardview.widget.CardView>
 
         </LinearLayout>
+
     </ScrollView>
+
 </LinearLayout>

@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 文件路径：app/src/main/res/layout/activity_custom_trait_input.xml -->
-<!-- 文件类型：XML Layout -->
-<!-- 文件状态：【新建】 -->
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white">
+    android:background="#F5F5F5">
 
+    <!-- Toolbar -->
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
@@ -33,18 +31,18 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="性格"
+                android:text="性格特质"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="8dp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/personalityChipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:chipSpacing="8dp" />
+                android:layout_marginTop="8dp"
+                app:singleSelection="false" />
 
             <!-- 兴趣爱好 -->
             <TextView
@@ -52,16 +50,16 @@
                 android:layout_height="wrap_content"
                 android:text="兴趣爱好"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/interestChipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:chipSpacing="8dp" />
+                android:layout_marginTop="8dp"
+                app:singleSelection="false" />
 
             <!-- 情感特征 -->
             <TextView
@@ -69,16 +67,16 @@
                 android:layout_height="wrap_content"
                 android:text="情感特征"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/emotionChipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:chipSpacing="8dp" />
+                android:layout_marginTop="8dp"
+                app:singleSelection="false" />
 
             <!-- 生活态度 -->
             <TextView
@@ -86,16 +84,16 @@
                 android:layout_height="wrap_content"
                 android:text="生活态度"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/lifestyleChipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:chipSpacing="8dp" />
+                android:layout_marginTop="8dp"
+                app:singleSelection="false" />
 
             <!-- 社交特点 -->
             <TextView
@@ -103,16 +101,16 @@
                 android:layout_height="wrap_content"
                 android:text="社交特点"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <com.google.android.material.chip.ChipGroup
                 android:id="@+id/socialChipGroup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:chipSpacing="8dp" />
+                android:layout_marginTop="8dp"
+                app:singleSelection="false" />
 
             <!-- 自定义描述 -->
             <TextView
@@ -120,68 +118,77 @@
                 android:layout_height="wrap_content"
                 android:text="补充描述（可选）"
                 android:textSize="16sp"
-                android:textStyle="bold"
                 android:textColor="@color/black"
-                android:layout_marginBottom="8dp" />
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
             <EditText
                 android:id="@+id/customDescriptionEdit"
                 android:layout_width="match_parent"
-                android:layout_height="120dp"
-                android:hint="输入更详细的性格描述..."
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:hint="例如：喜欢猫咪、爱吃甜食..."
+                android:minHeight="80dp"
                 android:gravity="top"
                 android:padding="12dp"
                 android:background="@drawable/bg_edit_text"
-                android:textSize="14sp"
                 android:inputType="textMultiLine"
-                android:layout_marginBottom="16dp" />
+                android:maxLength="200" />
 
             <!-- 聊天建议 -->
-            <androidx.cardview.widget.CardView
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardCornerRadius="8dp"
-                app:cardBackgroundColor="#FFF9E6">
+                android:text="聊天建议"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:layout_marginTop="16dp" />
 
-                <TextView
-                    android:id="@+id/suggestionsText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="12dp"
-                    android:text="请选择特质以获取聊天建议"
-                    android:textSize="14sp"
-                    android:textColor="@color/black" />
-
-            </androidx.cardview.widget.CardView>
+            <TextView
+                android:id="@+id/suggestionsText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="请选择特质以获取聊天建议"
+                android:textSize="14sp"
+                android:textColor="#666666"
+                android:padding="12dp"
+                android:background="@android:color/white" />
 
         </LinearLayout>
+
     </ScrollView>
 
-    <!-- 底部按钮栏 -->
+    <!-- 底部按钮 -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp"
-        android:background="@color/white"
-        android:elevation="8dp">
+        android:background="@android:color/white"
+        android:elevation="4dp">
 
         <Button
             android:id="@+id/randomTraitButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginEnd="8dp"
             android:text="随机生成"
-            android:layout_marginEnd="8dp" />
+            android:textColor="@android:color/white"
+            android:backgroundTint="#9C27B0" />
 
         <Button
             android:id="@+id/startChatButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_marginStart="8dp"
             android:text="开始聊天"
-            android:backgroundTint="@color/colorPrimary" />
+            android:textColor="@android:color/white"
+            android:backgroundTint="?attr/colorPrimary" />
 
     </LinearLayout>
+
 </LinearLayout>

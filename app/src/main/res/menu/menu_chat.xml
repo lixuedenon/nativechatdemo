@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/menu/menu_chat.xml -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/action_stop"
-        android:title="停止对话"
-        android:icon="@android:drawable/ic_menu_close_clear_cancel"
+        android:id="@+id/action_review"
+        android:title="复盘"
+        android:icon="@android:drawable/ic_menu_view"
         app:showAsAction="always"/>
 
 </menu>

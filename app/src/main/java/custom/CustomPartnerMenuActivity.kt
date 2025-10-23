@@ -1,9 +1,6 @@
-// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/custom/CustomPartnerMenuActivity.kt
-// 文件类型：Kotlin Class (Activity)
-// 文件状态：【修改】
-// 修改内容：添加所有缺失的import语句
+// 文件路径：app/src/main/java/custom/CustomPartnerMenuActivity.kt
 
-package com.example.nativechatdemo.ui.custom
+package com.example.nativechatdemo.custom  // ⭐ 修改这里
 
 import android.content.Intent
 import android.os.Bundle
@@ -79,7 +76,6 @@ class CustomPartnerMenuActivity : AppCompatActivity() {
     }
 
     private fun navigateToTraitInput(scenarioType: Int) {
-        // 使用完整的类名来创建Intent
         val intent = Intent(this, CustomTraitInputActivity::class.java)
         intent.putExtra("gender", gender)
         intent.putExtra("scenarioType", scenarioType)

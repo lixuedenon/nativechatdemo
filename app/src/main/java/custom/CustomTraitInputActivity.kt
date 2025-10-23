@@ -1,8 +1,6 @@
-// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/custom/CustomTraitInputActivity.kt
-// 文件类型：Kotlin Class (Activity)
-// 文件状态：【新建】
+// 文件路径：app/src/main/java/custom/CustomTraitInputActivity.kt
 
-package com.example.nativechatdemo.ui.custom
+package com.example.nativechatdemo.custom  // ⭐ 修改这里
 
 import android.content.Intent
 import android.os.Bundle

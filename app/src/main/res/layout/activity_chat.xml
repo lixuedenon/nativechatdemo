@@ -1,21 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- 文件路径：app/src/main/res/layout/activity_chat.xml -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white">
-
-    <!-- 文件路径：app/src/main/res/layout/activity_chat.xml -->
-    <!-- 文件类型：XML Layout -->
-    <!-- 文件状态：【修改】 -->
-    <!-- 修改内容：修复tint属性 -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Toolbar -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -23,7 +19,6 @@
             android:background="?attr/colorPrimary"
             app:titleTextColor="@android:color/white" />
 
-        <!-- 好感度显示区域 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,25 +27,24 @@
             android:background="#F5F5F5">
 
             <TextView
-                android:id="@+id/favorabilityText"
+                android:id="@+id/favorText"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="好感度: 50"
+                android:text="好感度: 50%"
                 android:textSize="14sp"
                 android:textColor="@color/black" />
 
             <TextView
-                android:id="@+id/roundsText"
+                android:id="@+id/roundText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="轮数: 0/45"
+                android:text="第0轮"
                 android:textSize="14sp"
                 android:textColor="@color/black" />
 
         </LinearLayout>
 
-        <!-- 好感度曲线 -->
         <HorizontalScrollView
             android:id="@+id/favorScrollView"
             android:layout_width="match_parent"
@@ -66,15 +60,17 @@
 
         </HorizontalScrollView>
 
-        <!-- 对话列表 -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:padding="8dp" />
+            android:padding="8dp"
+            android:clipToPadding="false" />
 
-        <!-- 输入区域 -->
+        <!-- 引用预览区域 -->
+        <include layout="@layout/layout_quote_preview" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -89,11 +85,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="输入消息..."
-                android:maxLength="50"
+                android:maxLength="200"
+                android:minHeight="48dp"
                 android:padding="12dp"
                 android:background="@drawable/bg_edit_text"
                 android:imeOptions="actionSend"
-                android:inputType="text" />
+                android:inputType="textMultiLine"
+                android:maxLines="3" />
 
             <ImageButton
                 android:id="@+id/sendButton"
@@ -102,13 +100,13 @@
                 android:layout_marginStart="8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_send"
-                app:tint="@color/colorPrimary" />
+                android:contentDescription="发送消息"
+                app:tint="?attr/colorPrimary" />
 
         </LinearLayout>
 
     </LinearLayout>
 
-    <!-- 告白按钮（定制模式专用） -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/confessionButton"
         android:layout_width="wrap_content"
@@ -117,8 +115,9 @@
         android:layout_marginTop="120dp"
         android:layout_marginEnd="16dp"
         android:src="@drawable/ic_favorite"
+        android:contentDescription="告白测试"
         android:visibility="gone"
-        app:backgroundTint="@color/pink"
+        app:backgroundTint="#FF69B4"
         app:fabSize="mini" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

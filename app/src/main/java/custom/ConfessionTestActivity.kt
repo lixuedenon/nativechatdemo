@@ -1,8 +1,7 @@
-// 文件路径：app/src/main/java/com/example/nativechatdemo/ui/custom/ConfessionTestActivity.kt
-// 文件类型：Kotlin Class (Activity)
-// 文件状态：【新建】
+// 文件路径：app/src/main/java/custom/ConfessionTestActivity.kt
+// 修改：package声明改为 com.example.nativechatdemo.custom
 
-package com.example.nativechatdemo.ui.custom
+package com.example.nativechatdemo.custom  // ⭐ 修改这里
 
 import android.os.Bundle
 import android.util.Log

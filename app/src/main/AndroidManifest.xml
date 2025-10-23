@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 文件路径：app/src/main/AndroidManifest.xml -->
-
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -15,42 +13,34 @@
         android:theme="@style/Theme.AppCompat.Light.DarkActionBar"
         tools:targetApi="31">
 
-        <!-- 女生模块页 -->
         <activity
             android:name=".ui.modules.FemaleModulesActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 男生模块页 -->
         <activity
             android:name=".ui.modules.MaleModulesActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 角色选择页 -->
         <activity
             android:name=".ui.character.CharacterSelectionActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 复盘页面 -->
         <activity
             android:name=".ui.review.ReviewActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 社交雷达菜单 -->
         <activity
             android:name=".ui.radar.RadarMenuActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 对话学习模式 -->
         <activity
             android:name=".ui.conversation.ConversationLearnActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 对话练习模式 -->
         <activity
             android:name=".ui.conversation.ConversationPracticeActivity"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
-        <!-- 主页 -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -61,7 +51,6 @@
             </intent-filter>
         </activity>
 
-        <!-- 聊天页 -->
         <activity
             android:name=".ui.chat.ChatActivity"
             android:windowSoftInputMode="adjustResize"
@@ -69,16 +58,16 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
 
         <activity
-            android:name=".ui.custom.CustomPartnerMenuActivity"
-            android:screenOrientation="portrait" />
+            android:name=".custom.CustomPartnerMenuActivity"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"/>
 
         <activity
-            android:name=".ui.custom.CustomTraitInputActivity"
-            android:screenOrientation="portrait" />
+            android:name=".custom.CustomTraitInputActivity"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"/>
 
         <activity
-            android:name=".ui.custom.ConfessionTestActivity"
-            android:screenOrientation="portrait" />
+            android:name=".custom.ConfessionTestActivity"
+            android:theme="@style/Theme.MaterialComponents.Light.NoActionBar"/>
 
     </application>
 
