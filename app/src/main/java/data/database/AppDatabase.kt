@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
         CustomPartnerTrait::class,    // 新增
         ConfessionTest::class          // 新增
     ],
-    version = 8,  // 升级版本号
+    version = 9,  // 升级版本号
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

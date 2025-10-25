@@ -1,3 +1,5 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/utils/PromptBuilder.kt
+
 package com.example.nativechatdemo.utils
 
 import com.example.nativechatdemo.data.model.Character
@@ -14,21 +16,14 @@ class PromptBuilder(
     fun buildSystemPrompt(): String {
         val parts = mutableListOf<String>()
 
-        // 1. 角色设定
         parts.add(getCharacterPrompt())
-
-        // 2. 场景设定
         parts.add(SceneConfig.getScenePrompt(sceneId))
-
-        // 3. 模块特定提示
         parts.add(getModulePrompt())
 
-        // 4. 记忆摘要（女友养成）
         if (moduleType == "girlfriend" && conversation.memoryJson != null) {
             parts.add("记忆摘要：${conversation.memoryJson}")
         }
 
-        // 5. 好感度指令
         parts.add(getFavorInstruction())
 
         return parts.joinToString("\n\n")
@@ -131,15 +126,13 @@ class PromptBuilder(
     }
 
     fun buildUserPrompt(userMessage: String, history: List<Message>): String {
-        // 构建对话历史
         val historyText = if (history.size > 20) {
-            // 只保留最近20条
             history.takeLast(20).joinToString("\n") {
-                "${if (it.isUser) "用户" else character.name}: ${it.content}"
+                "${if (it.sender == "user") "用户" else character.name}: ${it.content}"
             }
         } else {
             history.joinToString("\n") {
-                "${if (it.isUser) "用户" else character.name}: ${it.content}"
+                "${if (it.sender == "user") "用户" else character.name}: ${it.content}"
             }
         }
 

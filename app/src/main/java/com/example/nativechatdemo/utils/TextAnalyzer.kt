@@ -1,3 +1,5 @@
+// 文件路径：app/src/main/java/com/example/nativechatdemo/utils/TextAnalyzer.kt
+
 package com.example.nativechatdemo.utils
 
 import com.example.nativechatdemo.data.model.Message
@@ -29,8 +31,8 @@ object TextAnalyzer {
     fun calculateEffectiveRounds(messages: List<Message>): Int {
         var totalDensity = 0.0
 
-        messages.filter { it.isUser }.forEach { message ->
-            totalDensity += calculateDensityCoefficient(message.characterCount)
+        messages.filter { it.sender == "user" }.forEach { message ->
+            totalDensity += calculateDensityCoefficient(message.content.length)
         }
 
         return totalDensity.toInt()

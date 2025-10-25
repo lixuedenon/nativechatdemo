@@ -1,12 +1,9 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/utils/CustomPartnerService.kt
-// 文件类型：Kotlin Object
-// 文件状态：【修改】
-// 修改内容：添加缺失的import语句
 
 package com.example.nativechatdemo.utils
 
 import com.example.nativechatdemo.data.model.AIResponse
-import com.example.nativechatdemo.data.model.Conversation  // 添加这个import
+import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.Message
 import kotlin.random.Random
 
@@ -23,22 +20,11 @@ object CustomPartnerService {
         conversationHistory: List<Message>
     ): AIResponse {
 
-        // 分析用户输入的情感倾向
         val sentiment = analyzeUserSentiment(userInput)
-
-        // 根据特质决定回复风格
         val responseStyle = determineResponseStyle(traits)
-
-        // 生成基础回复
         var response = generateBaseResponse(userInput, responseStyle, currentRound)
-
-        // 根据特质调整回复
         response = adjustResponseByTraits(response, traits, sentiment)
-
-        // 计算好感度变化
         val favorChange = calculateFavorChange(traits, sentiment, userInput, currentFavorability)
-
-        // 添加好感度标记
         val taggedResponse = addFavorTag(response, favorChange)
 
         return AIResponse(
@@ -77,14 +63,12 @@ object CustomPartnerService {
      * 生成基础回复
      */
     private fun generateBaseResponse(input: String, style: String, round: Int): String {
-        // 根据轮数生成不同深度的回复
         val depth = when {
-            round < 5 -> "shallow"  // 初识阶段
-            round < 15 -> "medium"  // 了解阶段
-            else -> "deep"          // 深入阶段
+            round < 5 -> "shallow"
+            round < 15 -> "medium"
+            else -> "deep"
         }
 
-        // 这里应该有更复杂的逻辑，现在简化处理
         return when {
             input.contains("做什么") -> {
                 when (style) {
@@ -103,7 +87,6 @@ object CustomPartnerService {
                 }
             }
             else -> {
-                // 默认回复
                 when (style) {
                     "gentle" -> "嗯嗯，我明白的~"
                     "lively" -> "哈哈，是这样啊！"
@@ -120,22 +103,18 @@ object CustomPartnerService {
     private fun adjustResponseByTraits(response: String, traits: List<String>, sentiment: String): String {
         var adjusted = response
 
-        // 敏感特质：对负面情绪反应强烈
         if (traits.contains("敏感") && sentiment == "negative") {
             adjusted = "你是不是对我有什么不满...？"
         }
 
-        // 嫉妒心强：对某些话题敏感
         if (traits.contains("嫉妒心强") && response.contains("朋友")) {
             adjusted += "（语气有些不悦）是男生还是女生啊？"
         }
 
-        // 缺乏安全感：需要更多确认
         if (traits.contains("缺乏安全感") && sentiment == "positive") {
             adjusted += "你真的这么想吗？不是骗我的吧？"
         }
 
-        // 浪漫特质：喜欢甜言蜜语
         if (traits.contains("浪漫") && sentiment == "positive") {
             adjusted = "听到你这么说，我心里甜甜的~"
         }
@@ -154,7 +133,6 @@ object CustomPartnerService {
     ): Int {
         var change = 0
 
-        // 基础变化
         change = when (sentiment) {
             "positive" -> Random.nextInt(3, 8)
             "negative" -> Random.nextInt(-5, -1)
@@ -162,27 +140,24 @@ object CustomPartnerService {
             else -> Random.nextInt(-1, 3)
         }
 
-        // 特质影响
         if (traits.contains("敏感") && sentiment == "negative") {
-            change -= 3  // 敏感的人对负面反应更大
+            change -= 3
         }
 
         if (traits.contains("包容") && sentiment == "negative") {
-            change += 2  // 包容的人不太在意负面
+            change += 2
         }
 
-        // 特殊话题加成
         if (input.contains("一起") || input.contains("约会")) {
             change += 2
         }
 
-        // 好感度区间影响
         if (currentFavor < 20 && change < 0) {
-            change -= 2  // 低好感度时，负面影响更大
+            change -= 2
         }
 
         if (currentFavor > 80 && change > 0) {
-            change = (change * 0.7).toInt()  // 高好感度时，提升变缓
+            change = (change * 0.7).toInt()
         }
 
         return change.coerceIn(-10, 10)
@@ -214,20 +189,19 @@ object CustomPartnerService {
         currentFavor: Int,
         conversationHistory: List<Message>
     ): String? {
-        // 好感度过低触发分手
         if (currentFavor <= 10) {
             return "breakup"
         }
 
-        // 检查连续负面对话
         val recentMessages = conversationHistory.takeLast(6)
+        // 通过解析消息内容判断是否为负面消息
         val negativeMsgCount = recentMessages.count { msg ->
-            msg.favorChange != null && msg.favorChange < 0
+            msg.content.contains("[FAVOR:-") || msg.content.contains("FAVOR_PEAK:-")
         }
 
         if (negativeMsgCount >= 3) {
             if (traits.contains("敏感")) {
-                return "angry"  // 敏感的人更容易生气
+                return "angry"
             }
         }
 
@@ -272,30 +246,27 @@ object CustomPartnerService {
     ): ConfessionPrediction {
         var baseRate = 50f
 
-        // 根据测试类型调整基础成功率
         when (testType) {
-            1 -> {  // 连续聊天
+            1 -> {
                 val avgFavor = conversations.firstOrNull()?.currentFavorability ?: 50
                 baseRate = avgFavor.toFloat()
                 if (avgFavor > 70) baseRate += 10
             }
-            2 -> {  // 重复尝试
-                baseRate = 40f  // 重复尝试说明之前不够成功
+            2 -> {
+                baseRate = 40f
                 val attempts = conversations.size
-                baseRate += attempts * 5  // 每次尝试增加一点了解
+                baseRate += attempts * 5
             }
-            3 -> {  // 多样尝试
-                baseRate = 30f  // 没有固定方向，成功率较低
+            3 -> {
+                baseRate = 30f
             }
         }
 
-        // 特质影响
         if (traits.contains("浪漫")) baseRate += 10
         if (traits.contains("保守")) baseRate -= 10
         if (traits.contains("独立")) baseRate -= 5
         if (traits.contains("粘人")) baseRate += 5
 
-        // 生成分析建议
         val suggestions = mutableListOf<String>()
 
         if (baseRate < 40) {

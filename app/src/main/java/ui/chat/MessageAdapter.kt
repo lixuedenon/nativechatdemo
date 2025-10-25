@@ -34,11 +34,11 @@ class MessageAdapter : ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiff
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == VIEW_TYPE_SENT) {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_message_sent, parent, false)
+                .inflate(R.layout.item_message_me, parent, false)
             SentMessageViewHolder(view)
         } else {
             val view = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_message_received, parent, false)
+                .inflate(R.layout.item_message_partner, parent, false)
             ReceivedMessageViewHolder(view)
         }
     }
@@ -73,7 +73,6 @@ class MessageAdapter : ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiff
         fun bind(message: Message) {
             messageText.text = message.content
 
-            // 显示引用内容
             if (message.quotedContent != null) {
                 quotedLayout.visibility = View.VISIBLE
                 quotedSenderText.text = if (message.quotedSender == "user") "你" else "对方"
@@ -93,7 +92,6 @@ class MessageAdapter : ListAdapter<Message, RecyclerView.ViewHolder>(MessageDiff
         fun bind(message: Message) {
             messageText.text = message.content
 
-            // 显示引用内容
             if (message.quotedContent != null) {
                 quotedLayout.visibility = View.VISIBLE
                 quotedSenderText.text = if (message.quotedSender == "user") "你" else "对方"

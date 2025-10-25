@@ -1,7 +1,4 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/viewmodel/ChatViewModel.kt
-// 文件类型：Kotlin Class (ViewModel)
-// 文件状态：【修改】
-// 修改内容：添加定制模式支持，包括特质处理、特殊事件、告白功能
 
 package com.example.nativechatdemo.viewmodel
 
@@ -14,7 +11,7 @@ import com.example.nativechatdemo.data.model.Character
 import com.example.nativechatdemo.data.model.Conversation
 import com.example.nativechatdemo.data.model.FavorPoint
 import com.example.nativechatdemo.data.model.Message
-import com.example.nativechatdemo.utils.CustomPartnerService  // 新增
+import com.example.nativechatdemo.utils.CustomPartnerService
 import com.example.nativechatdemo.utils.MockAIService
 import com.example.nativechatdemo.utils.TrainingStoryConfig
 import kotlinx.coroutines.Dispatchers
@@ -31,7 +28,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
     private val messageDao = database.messageDao()
     private val conversationDao = database.conversationDao()
-    private val customTraitDao = database.customPartnerTraitDao()  // 新增
+    private val customTraitDao = database.customPartnerTraitDao()
 
     private val _conversation = MutableStateFlow<Conversation?>(null)
     val conversation: StateFlow<Conversation?> = _conversation
@@ -42,11 +39,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private val _favorPoints = MutableStateFlow<List<FavorPoint>>(emptyList())
     val favorPoints: StateFlow<List<FavorPoint>> = _favorPoints
 
-    // 养成模式结束事件
     private val _trainingEndingEvent = MutableStateFlow<TrainingEndingEvent?>(null)
     val trainingEndingEvent: StateFlow<TrainingEndingEvent?> = _trainingEndingEvent
 
-    // 定制模式特殊事件（新增）
     private val _customSpecialEvent = MutableStateFlow<String?>(null)
     val customSpecialEvent: StateFlow<String?> = _customSpecialEvent
 
@@ -57,7 +52,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     private var originalMessages: List<Message> = emptyList()
     private var moduleType: String = "basic"
 
-    // 定制模式相关（新增）
     private var customTraitId: String? = null
     private var customTraits: List<String> = emptyList()
     private var scenarioType: Int = 0
@@ -67,7 +61,7 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     data class TrainingEndingEvent(
-        val type: String  // "revive" 或 "final"
+        val type: String
     )
 
     fun initChat(
@@ -76,9 +70,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         replayMode: String? = null,
         originalConversationId: String? = null,
         moduleType: String = "basic",
-        customTraitId: String? = null,  // 新增
-        customTraits: String? = null,    // 新增
-        scenarioType: Int = 0            // 新增
+        customTraitId: String? = null,
+        customTraits: String? = null,
+        scenarioType: Int = 0
     ) {
         this.userId = userId
         this.character = character
@@ -88,7 +82,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         this.customTraitId = customTraitId
         this.scenarioType = scenarioType
 
-        // 解析特质
         if (customTraits != null) {
             try {
                 val jsonArray = JSONArray(customTraits)
@@ -108,7 +101,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 Log.d(TAG, "加载原对话消息数: ${originalMessages.size}")
             }
 
-            // 更新特质使用次数（定制模式）
             if (moduleType == "custom" && customTraitId != null) {
                 withContext(Dispatchers.IO) {
                     customTraitDao.incrementChatCount(customTraitId, System.currentTimeMillis())
@@ -122,14 +114,13 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 null
             }
 
-            // 根据场景类型设置初始好感度
             val initialFavor = when (moduleType) {
                 "custom" -> {
                     when (scenarioType) {
-                        1 -> 30  // 相识并初步了解
-                        2 -> 20  // 刚刚相识并有初步了解
-                        3 -> 15  // 尚未相识但有心仪目标
-                        4 -> 10  // 刚刚相识但不了解
+                        1 -> 30
+                        2 -> 20
+                        3 -> 15
+                        4 -> 10
                         else -> 10
                     }
                 }
@@ -153,8 +144,8 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
                 trainingEndingType = endingType,
                 reviveCount = 0,
                 totalTrainingRounds = 0,
-                customTraits = customTraits,  // 保存特质JSON
-                customScenarioType = scenarioType,  // 保存场景类型
+                customTraits = customTraits,
+                customScenarioType = scenarioType,
                 confessionButtonEnabled = false
             )
 
@@ -168,11 +159,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val welcomeMessage = Message(
                 id = UUID.randomUUID().toString(),
                 conversationId = newConversation.id,
+                sender = "ai",
                 content = welcomeContent,
-                isUser = false,
                 timestamp = System.currentTimeMillis(),
-                characterCount = welcomeContent.length,
-                favorChange = null
+                type = "text"
             )
 
             withContext(Dispatchers.IO) {
@@ -223,7 +213,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             Log.d(TAG, "发送消息，当前轮数: $currentRound, 模块类型: ${currentConv.moduleType}")
 
-            // 基础对话模式：检查45轮上限
             if (moduleType == "basic" && currentRound >= 45) {
                 Log.w(TAG, "已达轮数上限45轮")
                 return@launch
@@ -232,11 +221,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val userMessage = Message(
                 id = UUID.randomUUID().toString(),
                 conversationId = currentConv.id,
+                sender = "user",
                 content = content,
-                isUser = true,
                 timestamp = System.currentTimeMillis(),
-                characterCount = content.length,
-                favorChange = null
+                type = "text"
             )
 
             withContext(Dispatchers.IO) {
@@ -249,7 +237,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             val currentMessages = _messages.value
 
-            // 生成AI回复
             val aiResponse = when (currentConv.moduleType) {
                 "training" -> {
                     generateTrainingModeResponse(currentConv, content, currentMessages, currentRound + 1)
@@ -287,11 +274,10 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             val aiMessage = Message(
                 id = UUID.randomUUID().toString(),
                 conversationId = currentConv.id,
+                sender = "ai",
                 content = aiResponse.message,
-                isUser = false,
                 timestamp = System.currentTimeMillis(),
-                characterCount = aiResponse.message.length,
-                favorChange = favorChange
+                type = "text"
             )
 
             withContext(Dispatchers.IO) {
@@ -314,7 +300,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             _favorPoints.value = _favorPoints.value + newPoint
 
-            // 更新告白按钮状态（定制模式）
             val confessionEnabled = if (currentConv.moduleType == "custom") {
                 newRound >= 3 && newFavorability >= 40
             } else {
@@ -336,7 +321,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
             _conversation.value = updatedConversation
 
-            // 检查模式特殊事件
             when (currentConv.moduleType) {
                 "training" -> checkTrainingEnding(updatedConversation)
                 "custom" -> checkCustomSpecialEvent(updatedConversation)
@@ -347,8 +331,140 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * 生成定制模式的AI回复（新增）
+     * 发送带引用的消息
      */
+    fun sendMessageWithQuote(
+        content: String,
+        quotedMessageId: String,
+        quotedContent: String,
+        quotedSender: String
+    ) {
+        viewModelScope.launch {
+            val currentConv = _conversation.value ?: return@launch
+            val currentRound = currentConv.actualRounds
+
+            Log.d(TAG, "发送带引用的消息: $content, 引用: $quotedContent")
+
+            if (moduleType == "basic" && currentRound >= 45) {
+                Log.w(TAG, "已达轮数上限45轮")
+                return@launch
+            }
+
+            val userMessage = Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = currentConv.id,
+                sender = "user",
+                content = content,
+                timestamp = System.currentTimeMillis(),
+                type = "text",
+                quotedMessageId = quotedMessageId,
+                quotedContent = quotedContent,
+                quotedSender = quotedSender
+            )
+
+            withContext(Dispatchers.IO) {
+                messageDao.insertMessage(userMessage)
+            }
+
+            _messages.value = _messages.value + userMessage
+
+            delay(800)
+
+            val currentMessages = _messages.value
+
+            val aiResponse = when (currentConv.moduleType) {
+                "training" -> {
+                    generateTrainingModeResponse(currentConv, content, currentMessages, currentRound + 1)
+                }
+                "custom" -> {
+                    generateCustomModeResponse(currentConv, content, currentMessages, currentRound + 1)
+                }
+                else -> {
+                    if (replayMode != null) {
+                        MockAIService.generateReplayResponse(
+                            userInput = content,
+                            characterId = currentConv.characterId,
+                            currentRound = currentRound + 1,
+                            conversationHistory = currentMessages,
+                            currentFavorability = currentConv.currentFavorability,
+                            replayMode = replayMode!!,
+                            originalMessages = originalMessages,
+                            currentRoundIndex = currentRound
+                        )
+                    } else {
+                        MockAIService.generateResponse(
+                            userInput = content,
+                            characterId = currentConv.characterId,
+                            currentRound = currentRound + 1,
+                            conversationHistory = currentMessages,
+                            currentFavorability = currentConv.currentFavorability
+                        )
+                    }
+                }
+            }
+
+            val favorChange = aiResponse.favorabilityChange
+            val newFavorability = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
+
+            val aiMessage = Message(
+                id = UUID.randomUUID().toString(),
+                conversationId = currentConv.id,
+                sender = "ai",
+                content = aiResponse.message,
+                timestamp = System.currentTimeMillis(),
+                type = "text"
+            )
+
+            withContext(Dispatchers.IO) {
+                messageDao.insertMessage(aiMessage)
+            }
+
+            _messages.value = _messages.value + aiMessage
+
+            val newRound = currentRound + 1
+            val reason = extractReasonFromMessage(aiResponse.message)
+
+            val newPoint = FavorPoint(
+                round = newRound,
+                favor = newFavorability,
+                messageId = aiMessage.id,
+                reason = reason,
+                timestamp = System.currentTimeMillis(),
+                favorChange = favorChange
+            )
+
+            _favorPoints.value = _favorPoints.value + newPoint
+
+            val confessionEnabled = if (currentConv.moduleType == "custom") {
+                newRound >= 3 && newFavorability >= 40
+            } else {
+                false
+            }
+
+            val updatedConversation = currentConv.copy(
+                currentFavorability = newFavorability,
+                actualRounds = newRound,
+                updatedAt = System.currentTimeMillis(),
+                favorPoints = convertFavorPointsToJson(_favorPoints.value),
+                totalTrainingRounds = if (currentConv.isTrainingMode) newRound else 0,
+                confessionButtonEnabled = confessionEnabled
+            )
+
+            withContext(Dispatchers.IO) {
+                conversationDao.updateConversation(updatedConversation)
+            }
+
+            _conversation.value = updatedConversation
+
+            when (currentConv.moduleType) {
+                "training" -> checkTrainingEnding(updatedConversation)
+                "custom" -> checkCustomSpecialEvent(updatedConversation)
+            }
+
+            Log.d(TAG, "带引用的消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
+        }
+    }
+
     private fun generateCustomModeResponse(
         conversation: Conversation,
         userInput: String,
@@ -356,7 +472,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         nextRound: Int
     ): com.example.nativechatdemo.data.model.AIResponse {
 
-        // 检查特殊事件
         val specialEvent = CustomPartnerService.checkSpecialEvent(
             traits = customTraits,
             currentFavor = conversation.currentFavorability,
@@ -372,7 +487,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
             )
         }
 
-        // 正常生成回复
         return CustomPartnerService.generateCustomResponse(
             userInput = userInput,
             traits = customTraits,
@@ -382,9 +496,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         )
     }
 
-    /**
-     * 检查定制模式特殊事件（新增）
-     */
     private fun checkCustomSpecialEvent(conversation: Conversation) {
         val event = CustomPartnerService.checkSpecialEvent(
             traits = customTraits,
@@ -395,7 +506,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         if (event != null) {
             _customSpecialEvent.value = event
 
-            // 如果是分手事件，更新对话状态
             if (event == "breakup") {
                 viewModelScope.launch {
                     val updatedConv = conversation.copy(
@@ -411,14 +521,9 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    /**
-     * 重置定制事件（新增）
-     */
     fun resetCustomEvent() {
         _customSpecialEvent.value = null
     }
-
-    // ... 原有的其他方法保持不变（generateTrainingModeResponse、checkTrainingEnding等）
 
     private fun extractReasonFromMessage(message: String): String {
         val regex = """\[FAVOR[_PEAK]*:[+\-]?\d+:(.*?)]""".toRegex()
@@ -441,7 +546,6 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         return jsonArray.toString()
     }
 
-    // ... 保留所有原有的养成模式相关方法
     private fun generateTrainingModeResponse(
         conversation: Conversation,
         userInput: String,

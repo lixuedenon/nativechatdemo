@@ -1,6 +1,4 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/utils/MockAIService.kt
-// 文件类型：Kotlin Object
-// 修改内容：修复消息遍历逻辑，使用动态查找配对
 
 package com.example.nativechatdemo.utils
 
@@ -48,7 +46,16 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成复盘模式的AI回复
+     * 从消息内容中提取好感度变化
+     */
+    private fun extractFavorChange(message: Message): Int {
+        val regex = """\[FAVOR[_PEAK]*:([+\-]?\d+):.*?]""".toRegex()
+        val matchResult = regex.find(message.content)
+        return matchResult?.groupValues?.get(1)?.toIntOrNull() ?: 0
+    }
+
+    /**
+     * 生成复盘模式的AI回复
      */
     fun generateReplayResponse(
         userInput: String,
@@ -109,8 +116,8 @@ object MockAIService {
             null
         }
 
-        return if (originalAiMessage != null && !originalAiMessage.isUser) {
-            val favorChange = originalAiMessage.favorChange ?: 0
+        return if (originalAiMessage != null && originalAiMessage.sender != "user") {
+            val favorChange = extractFavorChange(originalAiMessage)
 
             AIResponse(
                 message = originalAiMessage.content,
@@ -201,7 +208,7 @@ object MockAIService {
         val newFavorability = (currentFavorability + favorChange).coerceIn(0, 100)
 
         val responseContent = if (shouldMentionOriginal && originalMessages.isNotEmpty()) {
-            val randomOriginalMsg = originalMessages.filter { !it.isUser }.randomOrNull()
+            val randomOriginalMsg = originalMessages.filter { it.sender != "user" }.randomOrNull()
             val originalTopic = randomOriginalMsg?.content?.take(15) ?: ""
 
             val mentionResponses = listOf(
@@ -251,7 +258,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成首次对话分析（修复：动态寻找配对）
+     * 生成首次对话分析（修复：动态寻找配对）
      */
     fun generateAnalysis(
         messages: List<Message>,
@@ -268,7 +275,7 @@ object MockAIService {
 
         while (i < messages.size) {
             // 跳过欢迎消息（第一条非用户消息）
-            if (i == 0 && !messages[i].isUser) {
+            if (i == 0 && messages[i].sender != "user") {
                 i++
                 continue
             }
@@ -276,10 +283,10 @@ object MockAIService {
             val currentMsg = messages[i]
 
             // 如果当前是用户消息，找下一条AI消息
-            if (currentMsg.isUser) {
+            if (currentMsg.sender == "user") {
                 // 向后查找第一条AI消息
                 var aiMsgIndex = i + 1
-                while (aiMsgIndex < messages.size && messages[aiMsgIndex].isUser) {
+                while (aiMsgIndex < messages.size && messages[aiMsgIndex].sender == "user") {
                     aiMsgIndex++
                 }
 
@@ -292,7 +299,7 @@ object MockAIService {
                         round = round,
                         userMessage = currentMsg.content,
                         aiMessage = aiMsg.content,
-                        favorChange = aiMsg.favorChange ?: 0,
+                        favorChange = extractFavorChange(aiMsg),
                         characterName = characterName
                     )
                     analysisArray.add(analysis)
@@ -315,7 +322,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成二次复盘分析（修复：动态寻找配对）
+     * 生成二次复盘分析（修复：动态寻找配对）
      */
     fun generateSecondReviewAnalysis(
         currentMessages: List<Message>,
@@ -333,17 +340,17 @@ object MockAIService {
 
         while (i < currentMessages.size) {
             // 跳过欢迎消息
-            if (i == 0 && !currentMessages[i].isUser) {
+            if (i == 0 && currentMessages[i].sender != "user") {
                 i++
                 continue
             }
 
             val currentMsg = currentMessages[i]
 
-            if (currentMsg.isUser) {
+            if (currentMsg.sender == "user") {
                 // 向后查找第一条AI消息
                 var aiMsgIndex = i + 1
-                while (aiMsgIndex < currentMessages.size && currentMessages[aiMsgIndex].isUser) {
+                while (aiMsgIndex < currentMessages.size && currentMessages[aiMsgIndex].sender == "user") {
                     aiMsgIndex++
                 }
 
@@ -358,7 +365,7 @@ object MockAIService {
                         userMessage = currentMsg.content,
                         aiMessage = aiMsg.content,
                         originalUserMessage = originalUserMsg?.content,
-                        favorChange = aiMsg.favorChange ?: 0,
+                        favorChange = extractFavorChange(aiMsg),
                         characterName = characterName
                     )
                     analysisArray.add(analysis)
@@ -379,21 +386,21 @@ object MockAIService {
     }
 
     /**
-     * 🔥 查找原对话中第n轮的用户消息
+     * 查找原对话中第n轮的用户消息
      */
     private fun findOriginalUserMessage(messages: List<Message>, targetRound: Int): Message? {
         var round = 1
         var i = 0
 
         while (i < messages.size) {
-            if (i == 0 && !messages[i].isUser) {
+            if (i == 0 && messages[i].sender != "user") {
                 i++
                 continue
             }
 
             val currentMsg = messages[i]
 
-            if (currentMsg.isUser) {
+            if (currentMsg.sender == "user") {
                 if (round == targetRound) {
                     return currentMsg
                 }
@@ -430,7 +437,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成单轮对话的分析（二次复盘 - 更友好）
+     * 生成单轮对话的分析（二次复盘 - 更友好）
      */
     private fun generateSecondSingleAnalysis(
         round: Int,
@@ -513,7 +520,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成分析文本（二次复盘 - 更友好，多夸奖）
+     * 生成分析文本（二次复盘 - 更友好，多夸奖）
      */
     private fun generateSecondAnalysisText(
         userMessage: String,
@@ -563,7 +570,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 获取积极的原因解释
+     * 获取积极的原因解释
      */
     private fun getPositiveReason(userMessage: String, favorChange: Int): String {
         return when {
@@ -613,7 +620,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成建议文本（二次复盘 - 提供更好的替代示例）
+     * 生成建议文本（二次复盘 - 提供更好的替代示例）
      */
     private fun generateSecondSuggestionText(
         userMessage: String,
@@ -671,7 +678,7 @@ object MockAIService {
     }
 
     /**
-     * 🔥 生成替代回复示例（二次复盘用 - 更具体、更实用）
+     * 生成替代回复示例（二次复盘用 - 更具体、更实用）
      */
     private fun generateAlternativeReply(original: String, style: String): String {
         return when (style) {
