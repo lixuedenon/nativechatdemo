@@ -71,7 +71,9 @@
         <!-- 引用预览区域 -->
         <include layout="@layout/layout_quote_preview" />
 
+        <!-- ✅✅✅ 核心修改：添加这一行 android:id="@+id/inputAreaLayout" ✅✅✅ -->
         <LinearLayout
+            android:id="@+id/inputAreaLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"

@@ -1,17 +1,18 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/ui/chat/ChatActivity.kt
-
 package com.example.nativechatdemo.ui.chat
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.MotionEvent
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
@@ -72,6 +73,9 @@ class ChatActivity : AppCompatActivity() {
     // PopupWindow
     private var messageActionPopup: PopupWindow? = null
 
+    // ✅ 输入区域的View，用于判断是否点击在输入区域
+    private lateinit var inputAreaLayout: LinearLayout
+
     companion object {
         private const val TAG = "ChatActivity"
     }
@@ -121,6 +125,7 @@ class ChatActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         inputEditText = findViewById(R.id.inputEditText)
         sendButton = findViewById(R.id.sendButton)
+        inputAreaLayout = findViewById(R.id.inputAreaLayout)
 
         favorLineView = findViewById(R.id.favorLineView)
         favorText = findViewById(R.id.favorText)
@@ -157,14 +162,6 @@ class ChatActivity : AppCompatActivity() {
                 stackFromEnd = true
             }
             adapter = messageAdapter
-
-            setOnTouchListener { _, _ ->
-                dismissPopup()
-                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(inputEditText.windowToken, 0)
-                inputEditText.clearFocus()
-                false
-            }
         }
         Log.d(TAG, "RecyclerView设置完成")
     }
@@ -378,7 +375,14 @@ class ChatActivity : AppCompatActivity() {
             LinearLayout.LayoutParams.WRAP_CONTENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
             true
-        )
+        ).apply {
+            // ✅ 关键修改：设置不影响输入法
+            inputMethodMode = PopupWindow.INPUT_METHOD_NOT_NEEDED
+            // ✅ 设置软键盘模式为不调整
+            softInputMode = android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+            // ✅ 设置点击外部可关闭
+            isOutsideTouchable = true
+        }
 
         // 复制
         popupView.findViewById<TextView>(R.id.actionCopy).setOnClickListener {
@@ -627,5 +631,42 @@ class ChatActivity : AppCompatActivity() {
         intent.putExtra("reviewType", "first")
         startActivity(intent)
         finish()
+    }
+
+    // ✅ 核心修改：简化逻辑，只要不点击输入区域就隐藏键盘
+    override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_UP) {
+            val view = currentFocus
+
+            if (view is EditText) {
+                // ✅ 如果 PopupWindow 正在显示，不隐藏键盘（避免长按松手时键盘消失）
+                if (messageActionPopup?.isShowing == true) {
+                    return super.dispatchTouchEvent(ev)
+                }
+
+                // ✅ 检查是否点击在输入区域（包括引用预览）
+                val inputAreaRect = Rect()
+                inputAreaLayout.getGlobalVisibleRect(inputAreaRect)
+
+                // 同时检查引用预览区域
+                val quoteRect = Rect()
+                quotePreviewLayout.getGlobalVisibleRect(quoteRect)
+
+                val clickX = ev.rawX.toInt()
+                val clickY = ev.rawY.toInt()
+
+                // 如果点击在输入区域或引用预览区域，不隐藏键盘
+                if (inputAreaRect.contains(clickX, clickY) ||
+                    (quotePreviewLayout.visibility == View.VISIBLE && quoteRect.contains(clickX, clickY))) {
+                    return super.dispatchTouchEvent(ev)
+                }
+
+                // ✅ 其他所有情况，隐藏键盘
+                view.clearFocus()
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(view.windowToken, 0)
+            }
+        }
+        return super.dispatchTouchEvent(ev)
     }
 }
