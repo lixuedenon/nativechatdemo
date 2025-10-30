@@ -1,39 +1,238 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+文件路径：app/src/main/res/values/strings.xml
+文件名：strings.xml
+文件类型：Values（字符串资源）
+状态：✅ 完整版（可直接使用）
+创建日期：2025-10-15
+最后修改：2025-10-28
+作者：Claude
+
+功能说明：
+包含应用所有字符串资源，包括：
+1. 应用基础信息
+2. 角色配置相关文案
+3. OpenAI API相关文案
+4. 聊天界面文案
+5. 错误提示文案
+6. 菜单和对话框文案
+-->
+
 <resources>
-    <string name="app_name">NativeChatDemo</string>
+    <!-- ========================================
+         应用基础信息
+         ======================================== -->
+    <string name="app_name">AI聊天Demo</string>
 
-    <!-- 定制模块相关 -->
-    <string name="trait_personality">性格</string>
-    <string name="trait_interests">兴趣爱好</string>
-    <string name="trait_emotion">情感特征</string>
-    <string name="trait_lifestyle">生活态度</string>
-    <string name="trait_social">社交特点</string>
-    <string name="trait_custom_description">补充描述（可选）</string>
-    <string name="trait_description_hint">输入更详细的性格描述...</string>
-    <string name="btn_random_generate">随机生成</string>
-    <string name="btn_start_chat">开始聊天</string>
+    <!-- ========================================
+         主界面
+         ======================================== -->
+    <string name="main_title">AI聊天Demo</string>
+    <string name="config_character">配置AI角色</string>
+    <string name="settings">设置</string>
+    <string name="about">关于</string>
 
-    <!-- 场景选择 -->
-    <string name="scenario_1_title">相识并初步了解</string>
-    <string name="scenario_1_desc">已经认识，了解对方性格</string>
-    <string name="scenario_2_title">刚刚相识并有初步了解</string>
-    <string name="scenario_2_desc">刚认识不久，了解部分特质</string>
-    <string name="scenario_3_title">尚未相识但有心仪目标</string>
-    <string name="scenario_3_desc">还没认识，但心中有理想型</string>
-    <string name="scenario_4_title">刚刚相识但不了解</string>
-    <string name="scenario_4_desc">刚认识，对对方一无所知</string>
+    <!-- ========================================
+         角色配置相关
+         ======================================== -->
 
-    <!-- 定制模块其他文本 -->
-    <string name="custom_partner_menu_title">请选择场景</string>
-    <string name="confession_test_title">告白成功率预测</string>
-    <string name="confession_rate_title">告白成功率</string>
-    <string name="analysis_result_title">分析结果</string>
-    <string name="suggestions_title">💡 建议</string>
-    <string name="back_to_chat">返回聊天</string>
+    <!-- 标题 -->
+    <string name="character_config_title">配置AI角色</string>
+    <string name="character_config_subtitle">选择预设模板或自定义配置</string>
 
-    <!-- 对话相关 -->
-    <string name="input_message_hint">输入消息...</string>
-    <string name="favorability_text">好感度: %d</string>
-    <string name="rounds_text">轮数: %d</string>
-    <string name="rounds_text_limit">轮数: %d/45</string>
+    <!-- 模式选择 -->
+    <string name="quick_mode">快速模板</string>
+    <string name="custom_mode">自定义配置</string>
+
+    <!-- 维度标题 -->
+    <string name="dimension_1_title">📋 维度1：基础身份</string>
+    <string name="dimension_2_title">🎭 维度2：性格类型</string>
+    <string name="dimension_3_title">🎨 维度3：兴趣爱好</string>
+    <string name="dimension_4_title">💬 维度4：社交风格</string>
+
+    <!-- 维度1：基础身份 -->
+    <string name="age_label">年龄</string>
+    <string name="age_format">%d岁</string>
+    <string name="occupation_label">职业</string>
+    <string name="education_label">教育程度</string>
+
+    <!-- 维度2：性格类型 -->
+    <string name="personality_label">性格类型（6选1）</string>
+    <string name="profanity_label">脏话程度</string>
+    <string name="emoji_label">表情符号使用频率</string>
+
+    <!-- 维度3：兴趣爱好 -->
+    <string name="hobby_title">兴趣爱好（最多3个）</string>
+    <string name="hobby_1_label">爱好1</string>
+    <string name="hobby_2_label">爱好2（可选）</string>
+    <string name="hobby_3_label">爱好3（可选）</string>
+    <string name="hobby_none">不选</string>
+
+    <!-- 维度4：社交风格 -->
+    <string name="proactivity_label">主动性（0=被动，10=超主动）</string>
+    <string name="proactivity_value">%d/10</string>
+    <string name="openness_label">开放度（0=保守，10=开放）</string>
+    <string name="openness_value">%d/10</string>
+    <string name="chat_habit_label">回复速度</string>
+
+    <!-- 角色名称 -->
+    <string name="character_name_title">给角色起个名字</string>
+    <string name="character_name_hint">例如：小美、Lisa、小雅</string>
+
+    <!-- 按钮 -->
+    <string name="save_and_start_chat">保存并开始聊天</string>
+    <string name="save">保存</string>
+    <string name="cancel">取消</string>
+    <string name="confirm">确定</string>
+
+    <!-- Toast提示 -->
+    <string name="character_name_empty">请输入角色名称</string>
+    <string name="template_not_selected">请选择一个模板</string>
+    <string name="character_created_success">角色创建成功</string>
+    <string name="character_created_failed">创建失败：%s</string>
+    <string name="invalid_character_id">角色ID无效</string>
+    <string name="character_not_found">角色不存在</string>
+    <string name="character_loading">正在加载角色...</string>
+    <string name="character_loaded">角色加载成功</string>
+    <string name="load_failed">加载失败：%s</string>
+
+    <!-- ========================================
+         OpenAI API相关
+         ======================================== -->
+
+    <!-- 配置对话框 -->
+    <string name="api_config_title">配置OpenAI API</string>
+    <string name="api_key_hint">输入OpenAI API Key (sk-...)</string>
+    <string name="api_key_message">请输入你的OpenAI API Key\n\n获取地址：\nhttps://platform.openai.com/api-keys\n\n提示：新注册用户有$5免费额度</string>
+    <string name="api_key_saved">API Key已保存</string>
+    <string name="api_key_invalid">API Key格式错误\n必须以 sk- 开头</string>
+    <string name="api_key_required">请先配置OpenAI API Key</string>
+    <string name="api_key_not_configured">未配置API Key，部分功能将无法使用</string>
+
+    <!-- API连接状态 -->
+    <string name="api_connection_testing">正在测试API连接...</string>
+    <string name="api_connection_success">API连接成功：%s</string>
+    <string name="api_connection_failed">API连接失败：%s\n请检查网络或API Key</string>
+    <string name="api_not_initialized">API未初始化</string>
+
+    <!-- ========================================
+         聊天界面
+         ======================================== -->
+
+    <!-- 标题和状态 -->
+    <string name="chat_with">与%s聊天</string>
+    <string name="chat_loading">聊天中...</string>
+
+    <!-- 好感度 -->
+    <string name="favor_display">好感度：%d/100</string>
+    <string name="favor_label">好感度</string>
+
+    <!-- AI状态 -->
+    <string name="ai_typing">AI正在思考...</string>
+    <string name="ai_replying">AI正在回复...</string>
+
+    <!-- 输入提示 -->
+    <string name="input_hint">输入消息...</string>
+    <string name="input_empty">请输入消息</string>
+    <string name="send">发送</string>
+
+    <!-- 消息操作 -->
+    <string name="message_copied">已复制到剪贴板</string>
+    <string name="message_quote">引用：%s</string>
+
+    <!-- ========================================
+         错误提示
+         ======================================== -->
+
+    <!-- 网络错误 -->
+    <string name="network_error">网络错误，请检查网络连接</string>
+    <string name="network_timeout">网络超时，请重试</string>
+    <string name="network_unavailable">网络不可用</string>
+
+    <!-- API错误 -->
+    <string name="api_error">API调用失败：%s</string>
+    <string name="api_error_401">API Key无效或已过期</string>
+    <string name="api_error_429">请求过于频繁，请稍后重试</string>
+    <string name="api_error_500">服务器错误，请稍后重试</string>
+    <string name="api_quota_exceeded">API额度已用完</string>
+
+    <!-- 数据库错误 -->
+    <string name="database_error">数据库错误：%s</string>
+    <string name="save_failed">保存失败</string>
+    <string name="load_failed_generic">加载失败</string>
+
+    <!-- 通用错误 -->
+    <string name="unknown_error">未知错误</string>
+    <string name="error_occurred">发生错误：%s</string>
+    <string name="operation_failed">操作失败</string>
+
+    <!-- ========================================
+         菜单
+         ======================================== -->
+    <string name="menu_api_config">配置API</string>
+    <string name="menu_settings">设置</string>
+    <string name="menu_about">关于</string>
+    <string name="menu_clear_chat">清空聊天记录</string>
+    <string name="menu_export_chat">导出聊天记录</string>
+
+    <!-- ========================================
+         对话框
+         ======================================== -->
+
+    <!-- 关于对话框 -->
+    <string name="about_title">关于</string>
+    <string name="about_message">AI聊天Demo v2.0\n\n基于OpenAI GPT-4模型\n支持角色配置和个性化对话\n\n开发者：[Your Name]</string>
+
+    <!-- 确认对话框 -->
+    <string name="confirm_clear_chat">确定要清空所有聊天记录吗？</string>
+    <string name="confirm_delete_character">确定要删除这个角色吗？</string>
+
+    <!-- ========================================
+         时间格式
+         ======================================== -->
+    <string name="time_format_today">HH:mm</string>
+    <string name="time_format_date">MM-dd HH:mm</string>
+    <string name="time_just_now">刚刚</string>
+    <string name="time_minutes_ago">%d分钟前</string>
+    <string name="time_hours_ago">%d小时前</string>
+    <string name="time_days_ago">%d天前</string>
+
+    <!-- ========================================
+         占位文本
+         ======================================== -->
+    <string name="no_messages">还没有消息，开始聊天吧~</string>
+    <string name="no_characters">还没有角色，创建一个吧~</string>
+    <string name="loading">加载中...</string>
+
+    <!-- ========================================
+         单位和格式
+         ======================================== -->
+    <string name="age_unit">岁</string>
+    <string name="score_format">%d分</string>
+    <string name="percent_format">%d%%</string>
+
 </resources>
+
+<!--
+========================================
+💡 使用说明
+========================================
+
+1. 在Kotlin代码中引用：
+   getString(R.string.character_config_title)
+   getString(R.string.favor_display, 50)  // 带参数
+
+2. 在XML布局中引用：
+   android:text="@string/character_config_title"
+
+3. 带参数的字符串：
+   使用 %s（字符串）、%d（整数）、%f（浮点数）
+   例如：getString(R.string.favor_display, favorValue)
+
+4. 多语言支持：
+   创建 values-zh/strings.xml（中文）
+   创建 values-en/strings.xml（英文）
+   系统会自动根据语言选择
+
+========================================
+-->

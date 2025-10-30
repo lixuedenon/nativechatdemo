@@ -1,169 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 文件路径：app/src/main/res/layout/activity_main.xml -->
-<!-- 文件类型：Android Layout XML -->
+<!-- 文件名：activity_main.xml (简化版) -->
+<!-- 状态：✅ 替换或新建 -->
 
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center">
 
-    <!-- 顶部标题 -->
     <TextView
-        android:id="@+id/titleText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="恋爱话术训练"
+        android:text="AI聊天Demo"
         android:textSize="32sp"
         android:textStyle="bold"
         android:textColor="#333333"
-        android:layout_marginTop="80dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:layout_marginBottom="48dp"/>
 
-    <!-- 副标题 -->
-    <TextView
-        android:id="@+id/subtitleText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="选择你的训练模式"
-        android:textSize="16sp"
-        android:textColor="#999999"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/titleText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- 女生篇按钮 -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/femaleCard"
-        android:layout_width="0dp"
-        android:layout_height="180dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginTop="80dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:layout_constraintTop_toBottomOf="@id/subtitleText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/gradient_female">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="👧"
-                android:textSize="64sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="女生篇"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                android:layout_marginTop="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="5个训练模块"
-                android:textSize="14sp"
-                android:textColor="#FFFFFF"
-                android:alpha="0.8"
-                android:layout_marginTop="4dp"/>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- 男生篇按钮 -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/maleCard"
-        android:layout_width="0dp"
-        android:layout_height="180dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginEnd="32dp"
-        android:layout_marginTop="24dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="8dp"
-        android:clickable="true"
-        android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        app:layout_constraintTop_toBottomOf="@id/femaleCard"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:gravity="center"
-            android:background="@drawable/gradient_male">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="👦"
-                android:textSize="64sp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="男生篇"
-                android:textSize="28sp"
-                android:textStyle="bold"
-                android:textColor="#FFFFFF"
-                android:layout_marginTop="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="4个训练模块"
-                android:textSize="14sp"
-                android:textColor="#FFFFFF"
-                android:alpha="0.8"
-                android:layout_marginTop="4dp"/>
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- 退出按钮 -->
     <Button
-        android:id="@+id/exitButton"
-        android:layout_width="0dp"
+        android:id="@+id/btnConfigCharacter"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="🚪 退出应用"
-        android:textSize="16sp"
-        android:textColor="#FFFFFF"
-        android:backgroundTint="#757575"
-        android:padding="12dp"
-        android:layout_marginStart="48dp"
-        android:layout_marginEnd="48dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintBottom_toTopOf="@id/versionText"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:text="配置AI角色"
+        android:textSize="18sp"
+        android:padding="16dp"
+        android:backgroundTint="#4CAF50"/>
 
-    <!-- 底部版本信息 -->
-    <TextView
-        android:id="@+id/versionText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="v1.0.0 Beta"
-        android:textSize="12sp"
-        android:textColor="#CCCCCC"
-        android:layout_marginBottom="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

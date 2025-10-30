@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 文件路径：app/src/main/res/layout/item_character_template.xml -->
+<!-- 文件名：item_character_template.xml -->
+<!-- 文件类型：Layout（XML布局文件）-->
+<!-- 状态：✅ 新建文件 -->
+<!-- 功能：角色模板列表项布局，用于RecyclerView -->
+<!-- 对应Adapter：TemplateAdapter（在CharacterConfigActivity.kt中） -->
+<!-- 创建日期：2025-10-28 -->
+<!-- 作者：Claude -->
+
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/templateCard"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="2dp"
+    app:strokeColor="#4CAF50"
+    app:strokeWidth="0dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
+
+        <!-- Emoji图标 -->
+        <TextView
+            android:id="@+id/templateEmoji"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎀"
+            android:textSize="36sp"
+            android:layout_marginEnd="16dp"/>
+
+        <!-- 文字信息 -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/templateName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="清纯学妹"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#333333"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:id="@+id/templateDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="20岁大学生，软萌可爱，喜欢撒娇"
+                android:textSize="14sp"
+                android:textColor="#666666"/>
+
+        </LinearLayout>
+
+        <!-- 选中图标（可选） -->
+        <ImageView
+            android:id="@+id/templateCheckIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@android:drawable/checkbox_on_background"
+            android:visibility="gone"
+            android:layout_marginStart="8dp"/>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
