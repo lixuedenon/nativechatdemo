@@ -1,4 +1,7 @@
 // 文件路径：app/src/main/java/com/example/nativechatdemo/viewmodel/ChatViewModel.kt
+// 文件名：ChatViewModel.kt
+// 状态：✅ 完全重写 - 接入OpenAI API
+// 修改说明：移除MockAIService，改用OpenAIService + PromptBuilder
 
 package com.example.nativechatdemo.viewmodel
 
@@ -9,11 +12,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.nativechatdemo.data.database.AppDatabase
 import com.example.nativechatdemo.data.model.Character
 import com.example.nativechatdemo.data.model.Conversation
-import com.example.nativechatdemo.data.model.FavorPoint
 import com.example.nativechatdemo.data.model.Message
-import com.example.nativechatdemo.utils.CustomPartnerService
-import com.example.nativechatdemo.utils.MockAIService
-import com.example.nativechatdemo.utils.TrainingStoryConfig
+import com.example.nativechatdemo.utils.OpenAIService
+import com.example.nativechatdemo.utils.PromptBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,312 +22,221 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONObject
 import java.util.*
 
 class ChatViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val database = AppDatabase.getDatabase(application)
+    private val database = AppDatabase.getInstance(application)
     private val messageDao = database.messageDao()
     private val conversationDao = database.conversationDao()
-    private val customTraitDao = database.customPartnerTraitDao()
+    private val characterDao = database.characterDao()
 
+    // ========== 状态管理 ==========
+
+    // 当前对话
     private val _conversation = MutableStateFlow<Conversation?>(null)
     val conversation: StateFlow<Conversation?> = _conversation
 
+    // 消息列表
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
 
-    private val _favorPoints = MutableStateFlow<List<FavorPoint>>(emptyList())
-    val favorPoints: StateFlow<List<FavorPoint>> = _favorPoints
+    // 当前好感度
+    private val _currentFavor = MutableStateFlow(50)
+    val currentFavor: StateFlow<Int> = _currentFavor
 
-    private val _trainingEndingEvent = MutableStateFlow<TrainingEndingEvent?>(null)
-    val trainingEndingEvent: StateFlow<TrainingEndingEvent?> = _trainingEndingEvent
+    // AI思考中状态（新增）
+    private val _aiTyping = MutableStateFlow(false)
+    val aiTyping: StateFlow<Boolean> = _aiTyping
 
-    private val _customSpecialEvent = MutableStateFlow<String?>(null)
-    val customSpecialEvent: StateFlow<String?> = _customSpecialEvent
+    // 错误信息（新增）
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
-    private var userId: String = ""
-    private var character: Character? = null
-    private var replayMode: String? = null
-    private var originalConversationId: String? = null
-    private var originalMessages: List<Message> = emptyList()
-    private var moduleType: String = "basic"
+    // 加载状态（新增）
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
 
-    private var customTraitId: String? = null
-    private var customTraits: List<String> = emptyList()
-    private var scenarioType: Int = 0
+    // 当前角色（缓存）
+    private var currentCharacter: Character? = null
 
     companion object {
         private const val TAG = "ChatViewModel"
     }
 
-    data class TrainingEndingEvent(
-        val type: String
-    )
+    // ========== 初始化聊天 ==========
 
+    /**
+     * 初始化聊天（简化版，只支持基础对话模式）
+     */
     fun initChat(
-        userId: String,
+        userId: Long,
         character: Character,
-        replayMode: String? = null,
-        originalConversationId: String? = null,
-        moduleType: String = "basic",
-        customTraitId: String? = null,
-        customTraits: String? = null,
-        scenarioType: Int = 0
+        mode: String = "basic"
     ) {
-        this.userId = userId
-        this.character = character
-        this.replayMode = replayMode
-        this.originalConversationId = originalConversationId
-        this.moduleType = moduleType
-        this.customTraitId = customTraitId
-        this.scenarioType = scenarioType
-
-        if (customTraits != null) {
-            try {
-                val jsonArray = JSONArray(customTraits)
-                this.customTraits = (0 until jsonArray.length()).map { jsonArray.getString(it) }
-            } catch (e: Exception) {
-                Log.e(TAG, "解析特质失败", e)
-            }
-        }
-
-        Log.d(TAG, "initChat - moduleType: $moduleType, replayMode: $replayMode, customTraitId: $customTraitId")
-
         viewModelScope.launch {
-            if (replayMode != null && originalConversationId != null) {
-                originalMessages = withContext(Dispatchers.IO) {
-                    messageDao.getMessagesByConversationId(originalConversationId)
-                }
-                Log.d(TAG, "加载原对话消息数: ${originalMessages.size}")
-            }
+            try {
+                _isLoading.value = true
+                currentCharacter = character
 
-            if (moduleType == "custom" && customTraitId != null) {
+                Log.d(TAG, "初始化聊天 - 角色: ${character.name}, 模式: $mode")
+
+                // 创建新对话
+                val newConversation = Conversation(
+                    id = UUID.randomUUID().toString(),
+                    userId = userId.toString(),
+                    characterId = character.id.toString(),
+                    characterName = character.name,
+                    currentFavorability = 50,  // 初始好感度50
+                    actualRounds = 0,
+                    status = "active",
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis(),
+                    moduleType = mode
+                )
+
+                // 保存对话到数据库
                 withContext(Dispatchers.IO) {
-                    customTraitDao.incrementChatCount(customTraitId, System.currentTimeMillis())
+                    conversationDao.insertConversation(newConversation)
                 }
-            }
 
-            val isTraining = moduleType == "training"
-            val endingType = if (isTraining) {
-                TrainingStoryConfig.getRandomEndingType().name.lowercase()
-            } else {
-                null
-            }
+                _conversation.value = newConversation
+                _currentFavor.value = 50
 
-            val initialFavor = when (moduleType) {
-                "custom" -> {
-                    when (scenarioType) {
-                        1 -> 30
-                        2 -> 20
-                        3 -> 15
-                        4 -> 10
-                        else -> 10
-                    }
+                // 生成欢迎消息
+                val welcomeMessage = Message(
+                    id = UUID.randomUUID().toString(),
+                    conversationId = newConversation.id,
+                    sender = "ai",
+                    content = generateWelcomeMessage(character),
+                    timestamp = System.currentTimeMillis(),
+                    type = "text"
+                )
+
+                // 保存欢迎消息
+                withContext(Dispatchers.IO) {
+                    messageDao.insertMessage(welcomeMessage)
                 }
-                else -> 50
-            }
 
-            val newConversation = Conversation(
-                id = UUID.randomUUID().toString(),
-                userId = userId,
-                characterId = character.id,
-                characterName = character.name,
-                currentFavorability = initialFavor,
-                actualRounds = 0,
-                status = "active",
-                createdAt = System.currentTimeMillis(),
-                updatedAt = System.currentTimeMillis(),
-                moduleType = moduleType,
-                reviewMode = replayMode,
-                originalConversationId = originalConversationId,
-                isTrainingMode = isTraining,
-                trainingEndingType = endingType,
-                reviveCount = 0,
-                totalTrainingRounds = 0,
-                customTraits = customTraits,
-                customScenarioType = scenarioType,
-                confessionButtonEnabled = false
-            )
+                _messages.value = listOf(welcomeMessage)
 
-            withContext(Dispatchers.IO) {
-                conversationDao.insertConversation(newConversation)
-            }
+                Log.d(TAG, "聊天初始化成功")
 
-            _conversation.value = newConversation
-
-            val welcomeContent = generateWelcomeMessage(character.name, moduleType, scenarioType)
-            val welcomeMessage = Message(
-                id = UUID.randomUUID().toString(),
-                conversationId = newConversation.id,
-                sender = "ai",
-                content = welcomeContent,
-                timestamp = System.currentTimeMillis(),
-                type = "text"
-            )
-
-            withContext(Dispatchers.IO) {
-                messageDao.insertMessage(welcomeMessage)
-            }
-
-            _messages.value = listOf(welcomeMessage)
-
-            val initialPoint = FavorPoint(
-                round = 0,
-                favor = initialFavor,
-                messageId = welcomeMessage.id,
-                reason = "",
-                timestamp = System.currentTimeMillis(),
-                favorChange = 0
-            )
-            _favorPoints.value = listOf(initialPoint)
-        }
-    }
-
-    private fun generateWelcomeMessage(name: String, moduleType: String, scenarioType: Int): String {
-        return when (moduleType) {
-            "custom" -> {
-                when (scenarioType) {
-                    1 -> "好久不见！最近怎么样？"
-                    2 -> "嗨！又见面了，今天有空吗？"
-                    3 -> "你好呀！很高兴认识你~"
-                    4 -> "你好！"
-                    else -> "你好~"
-                }
-            }
-            else -> {
-                when {
-                    name.contains("温柔") -> "你好~很高兴认识你呢"
-                    name.contains("活泼") -> "嗨！终于等到你啦！"
-                    name.contains("优雅") || name.contains("高冷") -> "你好，认识你很高兴。"
-                    name.contains("阳光") -> "嘿！你好呀~"
-                    else -> "你好~"
-                }
+            } catch (e: Exception) {
+                Log.e(TAG, "初始化聊天失败", e)
+                _errorMessage.value = "初始化失败：${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
+    // ========== 发送消息 ==========
+
+    /**
+     * 发送消息（核心方法 - 调用OpenAI API）
+     */
     fun sendMessage(content: String) {
         viewModelScope.launch {
-            val currentConv = _conversation.value ?: return@launch
-            val currentRound = currentConv.actualRounds
-
-            Log.d(TAG, "发送消息，当前轮数: $currentRound, 模块类型: ${currentConv.moduleType}")
-
-            if (moduleType == "basic" && currentRound >= 45) {
-                Log.w(TAG, "已达轮数上限45轮")
-                return@launch
-            }
-
-            val userMessage = Message(
-                id = UUID.randomUUID().toString(),
-                conversationId = currentConv.id,
-                sender = "user",
-                content = content,
-                timestamp = System.currentTimeMillis(),
-                type = "text"
-            )
-
-            withContext(Dispatchers.IO) {
-                messageDao.insertMessage(userMessage)
-            }
-
-            _messages.value = _messages.value + userMessage
-
-            delay(800)
-
-            val currentMessages = _messages.value
-
-            val aiResponse = when (currentConv.moduleType) {
-                "training" -> {
-                    generateTrainingModeResponse(currentConv, content, currentMessages, currentRound + 1)
+            try {
+                val currentConv = _conversation.value ?: run {
+                    _errorMessage.value = "对话未初始化"
+                    return@launch
                 }
-                "custom" -> {
-                    generateCustomModeResponse(currentConv, content, currentMessages, currentRound + 1)
+
+                val character = currentCharacter ?: run {
+                    _errorMessage.value = "角色信息丢失"
+                    return@launch
                 }
-                else -> {
-                    if (replayMode != null) {
-                        MockAIService.generateReplayResponse(
-                            userInput = content,
-                            characterId = currentConv.characterId,
-                            currentRound = currentRound + 1,
-                            conversationHistory = currentMessages,
-                            currentFavorability = currentConv.currentFavorability,
-                            replayMode = replayMode!!,
-                            originalMessages = originalMessages,
-                            currentRoundIndex = currentRound
-                        )
-                    } else {
-                        MockAIService.generateResponse(
-                            userInput = content,
-                            characterId = currentConv.characterId,
-                            currentRound = currentRound + 1,
-                            conversationHistory = currentMessages,
-                            currentFavorability = currentConv.currentFavorability
-                        )
-                    }
+
+                // 检查OpenAI是否初始化
+                if (!OpenAIService.isInitialized()) {
+                    _errorMessage.value = "OpenAI API未配置"
+                    return@launch
                 }
+
+                Log.d(TAG, "发送消息: $content")
+
+                // 1. 保存用户消息
+                val userMessage = Message(
+                    id = UUID.randomUUID().toString(),
+                    conversationId = currentConv.id,
+                    sender = "user",
+                    content = content,
+                    timestamp = System.currentTimeMillis(),
+                    type = "text"
+                )
+
+                withContext(Dispatchers.IO) {
+                    messageDao.insertMessage(userMessage)
+                }
+
+                _messages.value = _messages.value + userMessage
+
+                // 2. 显示AI思考中
+                _aiTyping.value = true
+                delay(500)  // 模拟思考延迟
+
+                // 3. 调用OpenAI API
+                val currentRound = currentConv.actualRounds + 1
+                val currentMessages = _messages.value
+
+                val aiResponse = callOpenAI(
+                    character = character,
+                    messages = currentMessages,
+                    conversationRound = currentRound,
+                    currentFavor = currentConv.currentFavorability
+                )
+
+                // 4. 解析AI回复
+                val (aiContent, favorChange) = parseAIResponse(aiResponse.content)
+
+                // 5. 计算新好感度
+                val newFavor = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
+
+                // 6. 保存AI消息
+                val aiMessage = Message(
+                    id = UUID.randomUUID().toString(),
+                    conversationId = currentConv.id,
+                    sender = "ai",
+                    content = aiContent,
+                    timestamp = System.currentTimeMillis(),
+                    type = "text"
+                )
+
+                withContext(Dispatchers.IO) {
+                    messageDao.insertMessage(aiMessage)
+                }
+
+                _messages.value = _messages.value + aiMessage
+
+                // 7. 更新对话状态
+                val updatedConv = currentConv.copy(
+                    currentFavorability = newFavor,
+                    actualRounds = currentRound,
+                    updatedAt = System.currentTimeMillis(),
+                    totalTokens = currentConv.totalTokens + aiResponse.totalTokens
+                )
+
+                withContext(Dispatchers.IO) {
+                    conversationDao.updateConversation(updatedConv)
+                }
+
+                _conversation.value = updatedConv
+                _currentFavor.value = newFavor
+
+                Log.d(TAG, "消息发送成功 - 轮数: $currentRound, 好感度: $newFavor (${if(favorChange>0) "+" else ""}$favorChange)")
+
+            } catch (e: com.example.nativechatdemo.utils.OpenAIException) {
+                Log.e(TAG, "OpenAI API错误", e)
+                _errorMessage.value = e.getFriendlyMessage()
+            } catch (e: Exception) {
+                Log.e(TAG, "发送消息失败", e)
+                _errorMessage.value = "发送失败：${e.message}"
+            } finally {
+                _aiTyping.value = false
             }
-
-            val favorChange = aiResponse.favorabilityChange
-            val newFavorability = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
-
-            val aiMessage = Message(
-                id = UUID.randomUUID().toString(),
-                conversationId = currentConv.id,
-                sender = "ai",
-                content = aiResponse.message,
-                timestamp = System.currentTimeMillis(),
-                type = "text"
-            )
-
-            withContext(Dispatchers.IO) {
-                messageDao.insertMessage(aiMessage)
-            }
-
-            _messages.value = _messages.value + aiMessage
-
-            val newRound = currentRound + 1
-            val reason = extractReasonFromMessage(aiResponse.message)
-
-            val newPoint = FavorPoint(
-                round = newRound,
-                favor = newFavorability,
-                messageId = aiMessage.id,
-                reason = reason,
-                timestamp = System.currentTimeMillis(),
-                favorChange = favorChange
-            )
-
-            _favorPoints.value = _favorPoints.value + newPoint
-
-            val confessionEnabled = if (currentConv.moduleType == "custom") {
-                newRound >= 3 && newFavorability >= 40
-            } else {
-                false
-            }
-
-            val updatedConversation = currentConv.copy(
-                currentFavorability = newFavorability,
-                actualRounds = newRound,
-                updatedAt = System.currentTimeMillis(),
-                favorPoints = convertFavorPointsToJson(_favorPoints.value),
-                totalTrainingRounds = if (currentConv.isTrainingMode) newRound else 0,
-                confessionButtonEnabled = confessionEnabled
-            )
-
-            withContext(Dispatchers.IO) {
-                conversationDao.updateConversation(updatedConversation)
-            }
-
-            _conversation.value = updatedConversation
-
-            when (currentConv.moduleType) {
-                "training" -> checkTrainingEnding(updatedConversation)
-                "custom" -> checkCustomSpecialEvent(updatedConversation)
-            }
-
-            Log.d(TAG, "消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
         }
     }
 
@@ -340,314 +250,167 @@ class ChatViewModel(application: Application) : AndroidViewModel(application) {
         quotedSender: String
     ) {
         viewModelScope.launch {
-            val currentConv = _conversation.value ?: return@launch
-            val currentRound = currentConv.actualRounds
+            try {
+                val currentConv = _conversation.value ?: return@launch
+                val character = currentCharacter ?: return@launch
 
-            Log.d(TAG, "发送带引用的消息: $content, 引用: $quotedContent")
-
-            if (moduleType == "basic" && currentRound >= 45) {
-                Log.w(TAG, "已达轮数上限45轮")
-                return@launch
-            }
-
-            val userMessage = Message(
-                id = UUID.randomUUID().toString(),
-                conversationId = currentConv.id,
-                sender = "user",
-                content = content,
-                timestamp = System.currentTimeMillis(),
-                type = "text",
-                quotedMessageId = quotedMessageId,
-                quotedContent = quotedContent,
-                quotedSender = quotedSender
-            )
-
-            withContext(Dispatchers.IO) {
-                messageDao.insertMessage(userMessage)
-            }
-
-            _messages.value = _messages.value + userMessage
-
-            delay(800)
-
-            val currentMessages = _messages.value
-
-            val aiResponse = when (currentConv.moduleType) {
-                "training" -> {
-                    generateTrainingModeResponse(currentConv, content, currentMessages, currentRound + 1)
+                if (!OpenAIService.isInitialized()) {
+                    _errorMessage.value = "OpenAI API未配置"
+                    return@launch
                 }
-                "custom" -> {
-                    generateCustomModeResponse(currentConv, content, currentMessages, currentRound + 1)
+
+                // 保存带引用的用户消息
+                val userMessage = Message(
+                    id = UUID.randomUUID().toString(),
+                    conversationId = currentConv.id,
+                    sender = "user",
+                    content = content,
+                    timestamp = System.currentTimeMillis(),
+                    type = "text",
+                    quotedMessageId = quotedMessageId,
+                    quotedContent = quotedContent,
+                    quotedSender = quotedSender
+                )
+
+                withContext(Dispatchers.IO) {
+                    messageDao.insertMessage(userMessage)
                 }
-                else -> {
-                    if (replayMode != null) {
-                        MockAIService.generateReplayResponse(
-                            userInput = content,
-                            characterId = currentConv.characterId,
-                            currentRound = currentRound + 1,
-                            conversationHistory = currentMessages,
-                            currentFavorability = currentConv.currentFavorability,
-                            replayMode = replayMode!!,
-                            originalMessages = originalMessages,
-                            currentRoundIndex = currentRound
-                        )
-                    } else {
-                        MockAIService.generateResponse(
-                            userInput = content,
-                            characterId = currentConv.characterId,
-                            currentRound = currentRound + 1,
-                            conversationHistory = currentMessages,
-                            currentFavorability = currentConv.currentFavorability
-                        )
-                    }
+
+                _messages.value = _messages.value + userMessage
+                _aiTyping.value = true
+                delay(500)
+
+                val currentRound = currentConv.actualRounds + 1
+                val currentMessages = _messages.value
+
+                val aiResponse = callOpenAI(
+                    character = character,
+                    messages = currentMessages,
+                    conversationRound = currentRound,
+                    currentFavor = currentConv.currentFavorability
+                )
+
+                val (aiContent, favorChange) = parseAIResponse(aiResponse.content)
+                val newFavor = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
+
+                val aiMessage = Message(
+                    id = UUID.randomUUID().toString(),
+                    conversationId = currentConv.id,
+                    sender = "ai",
+                    content = aiContent,
+                    timestamp = System.currentTimeMillis(),
+                    type = "text"
+                )
+
+                withContext(Dispatchers.IO) {
+                    messageDao.insertMessage(aiMessage)
                 }
+
+                _messages.value = _messages.value + aiMessage
+
+                val updatedConv = currentConv.copy(
+                    currentFavorability = newFavor,
+                    actualRounds = currentRound,
+                    updatedAt = System.currentTimeMillis(),
+                    totalTokens = currentConv.totalTokens + aiResponse.totalTokens
+                )
+
+                withContext(Dispatchers.IO) {
+                    conversationDao.updateConversation(updatedConv)
+                }
+
+                _conversation.value = updatedConv
+                _currentFavor.value = newFavor
+
+            } catch (e: Exception) {
+                Log.e(TAG, "发送引用消息失败", e)
+                _errorMessage.value = "发送失败：${e.message}"
+            } finally {
+                _aiTyping.value = false
             }
-
-            val favorChange = aiResponse.favorabilityChange
-            val newFavorability = (currentConv.currentFavorability + favorChange).coerceIn(0, 100)
-
-            val aiMessage = Message(
-                id = UUID.randomUUID().toString(),
-                conversationId = currentConv.id,
-                sender = "ai",
-                content = aiResponse.message,
-                timestamp = System.currentTimeMillis(),
-                type = "text"
-            )
-
-            withContext(Dispatchers.IO) {
-                messageDao.insertMessage(aiMessage)
-            }
-
-            _messages.value = _messages.value + aiMessage
-
-            val newRound = currentRound + 1
-            val reason = extractReasonFromMessage(aiResponse.message)
-
-            val newPoint = FavorPoint(
-                round = newRound,
-                favor = newFavorability,
-                messageId = aiMessage.id,
-                reason = reason,
-                timestamp = System.currentTimeMillis(),
-                favorChange = favorChange
-            )
-
-            _favorPoints.value = _favorPoints.value + newPoint
-
-            val confessionEnabled = if (currentConv.moduleType == "custom") {
-                newRound >= 3 && newFavorability >= 40
-            } else {
-                false
-            }
-
-            val updatedConversation = currentConv.copy(
-                currentFavorability = newFavorability,
-                actualRounds = newRound,
-                updatedAt = System.currentTimeMillis(),
-                favorPoints = convertFavorPointsToJson(_favorPoints.value),
-                totalTrainingRounds = if (currentConv.isTrainingMode) newRound else 0,
-                confessionButtonEnabled = confessionEnabled
-            )
-
-            withContext(Dispatchers.IO) {
-                conversationDao.updateConversation(updatedConversation)
-            }
-
-            _conversation.value = updatedConversation
-
-            when (currentConv.moduleType) {
-                "training" -> checkTrainingEnding(updatedConversation)
-                "custom" -> checkCustomSpecialEvent(updatedConversation)
-            }
-
-            Log.d(TAG, "带引用的消息发送完成，当前轮数: $newRound, 好感度: $newFavorability")
         }
     }
 
-    private fun generateCustomModeResponse(
-        conversation: Conversation,
-        userInput: String,
-        history: List<Message>,
-        nextRound: Int
-    ): com.example.nativechatdemo.data.model.AIResponse {
+    // ========== 辅助方法 ==========
 
-        val specialEvent = CustomPartnerService.checkSpecialEvent(
-            traits = customTraits,
-            currentFavor = conversation.currentFavorability,
-            conversationHistory = history
+    /**
+     * 调用OpenAI API
+     */
+    private suspend fun callOpenAI(
+        character: Character,
+        messages: List<Message>,
+        conversationRound: Int,
+        currentFavor: Int
+    ): com.example.nativechatdemo.utils.AIResponse = withContext(Dispatchers.IO) {
+
+        // 构建messages数组（使用PromptBuilder）
+        val messagesArray = PromptBuilder.buildMessages(
+            character = character,
+            messages = messages,
+            conversationRound = conversationRound,
+            currentFavor = currentFavor,
+            maxHistoryMessages = 20  // 最多保留20条历史消息
         )
 
-        if (specialEvent != null) {
-            val specialMessage = CustomPartnerService.generateSpecialEventResponse(specialEvent, customTraits)
-            return com.example.nativechatdemo.data.model.AIResponse(
-                message = specialMessage,
-                favorabilityChange = -10,
-                responseTime = System.currentTimeMillis()
-            )
-        }
-
-        return CustomPartnerService.generateCustomResponse(
-            userInput = userInput,
-            traits = customTraits,
-            currentRound = nextRound,
-            currentFavorability = conversation.currentFavorability,
-            conversationHistory = history
+        // 调用OpenAI API
+        OpenAIService.sendMessage(
+            messages = messagesArray,
+            temperature = 0.8,  // 稍高的随机性，让回复更自然
+            maxTokens = 500     // 限制回复长度
         )
     }
 
-    private fun checkCustomSpecialEvent(conversation: Conversation) {
-        val event = CustomPartnerService.checkSpecialEvent(
-            traits = customTraits,
-            currentFavor = conversation.currentFavorability,
-            conversationHistory = _messages.value
-        )
+    /**
+     * 解析AI回复（提取回复内容和好感度变化）
+     *
+     * AI回复格式：
+     * {
+     *   "reply": "实际回复内容",
+     *   "favor_change": 3,
+     *   "favor_reason": "原因"
+     * }
+     */
+    private fun parseAIResponse(content: String): Pair<String, Int> {
+        return try {
+            // 尝试解析JSON格式
+            val json = JSONObject(content)
+            val reply = json.optString("reply", content)
+            val favorChange = json.optInt("favor_change", 0)
 
-        if (event != null) {
-            _customSpecialEvent.value = event
-
-            if (event == "breakup") {
-                viewModelScope.launch {
-                    val updatedConv = conversation.copy(
-                        status = "ended",
-                        updatedAt = System.currentTimeMillis()
-                    )
-                    withContext(Dispatchers.IO) {
-                        conversationDao.updateConversation(updatedConv)
-                    }
-                    _conversation.value = updatedConv
-                }
-            }
+            Pair(reply, favorChange)
+        } catch (e: Exception) {
+            // 如果不是JSON格式，直接返回原内容，好感度变化为0
+            Log.w(TAG, "AI回复不是JSON格式，使用原始内容", e)
+            Pair(content, 0)
         }
     }
 
-    fun resetCustomEvent() {
-        _customSpecialEvent.value = null
-    }
+    /**
+     * 生成欢迎消息
+     */
+    private fun generateWelcomeMessage(character: Character): String {
+        val traits = character.getTraits()
 
-    private fun extractReasonFromMessage(message: String): String {
-        val regex = """\[FAVOR[_PEAK]*:[+\-]?\d+:(.*?)]""".toRegex()
-        val matchResult = regex.find(message)
-        return matchResult?.groupValues?.get(1) ?: ""
-    }
-
-    private fun convertFavorPointsToJson(points: List<FavorPoint>): String {
-        val jsonArray = JSONArray()
-        points.forEach { point ->
-            val jsonObject = org.json.JSONObject()
-            jsonObject.put("round", point.round)
-            jsonObject.put("favor", point.favor)
-            jsonObject.put("messageId", point.messageId)
-            jsonObject.put("reason", point.reason)
-            jsonObject.put("timestamp", point.timestamp)
-            jsonObject.put("favorChange", point.favorChange)
-            jsonArray.put(jsonObject)
-        }
-        return jsonArray.toString()
-    }
-
-    private fun generateTrainingModeResponse(
-        conversation: Conversation,
-        userInput: String,
-        history: List<Message>,
-        nextRound: Int
-    ): com.example.nativechatdemo.data.model.AIResponse {
-        val shouldIntroduceEnding = shouldIntroduceEnding(nextRound)
-
-        if (shouldIntroduceEnding) {
-            return generateEndingIntroResponse(conversation, nextRound)
-        }
-
-        return MockAIService.generateResponse(
-            userInput = userInput,
-            characterId = conversation.characterId,
-            currentRound = nextRound,
-            conversationHistory = history,
-            currentFavorability = conversation.currentFavorability
-        )
-    }
-
-    private fun shouldIntroduceEnding(rounds: Int): Boolean {
-        return rounds == 20 || rounds == 45 || rounds == 70 || rounds == 95
-    }
-
-    private fun generateEndingIntroResponse(
-        conversation: Conversation,
-        rounds: Int
-    ): com.example.nativechatdemo.data.model.AIResponse {
-        val endingType = TrainingStoryConfig.EndingType.valueOf(conversation.trainingEndingType?.uppercase() ?: "SICK")
-
-        val message = when (endingType) {
-            TrainingStoryConfig.EndingType.SICK -> {
-                when (rounds) {
-                    20 -> "对了...其实我最近身体不太舒服，去医院检查了一下... [FAVOR:+3:关心的话题]"
-                    45 -> "医生说我的病情有点严重...可能需要很长时间治疗... [FAVOR:+2:沉重的话题]"
-                    70 -> "我真的很珍惜和你在一起的时光...虽然不知道还能陪你多久... [FAVOR:+5:真挚的情感]"
-                    95 -> "我可能...真的撑不了太久了...但能认识你，是我最幸运的事... [FAVOR:+8:深情告白]"
-                    else -> "嗯... [FAVOR:+1:]"
-                }
-            }
-            TrainingStoryConfig.EndingType.TIMETRAVEL -> {
-                when (rounds) {
-                    20 -> "我有件事一直没告诉你...其实我不属于这个时空... [FAVOR:+3:神秘的秘密]"
-                    45 -> "时空裂缝开始出现了...我可能随时会被召回原来的世界... [FAVOR:+2:担忧的预感]"
-                    70 -> "每次和你在一起，我都在和命运抗争...但我不想离开你... [FAVOR:+5:坚定的决心]"
-                    95 -> "时空裂缝越来越大了...我真的要回去了...但我永远不会忘记你... [FAVOR:+8:不舍的告别]"
-                    else -> "嗯... [FAVOR:+1:]"
-                }
-            }
-        }
-
-        return com.example.nativechatdemo.data.model.AIResponse(
-            message = message,
-            favorabilityChange = if (rounds >= 90) 8 else if (rounds >= 60) 5 else 3,
-            responseTime = System.currentTimeMillis()
-        )
-    }
-
-    private fun checkTrainingEnding(conversation: Conversation) {
-        val rounds = conversation.actualRounds
-
-        if (rounds % 25 == 0) {
-            if (_trainingEndingEvent.value != null) {
-                Log.d(TAG, "已有结束事件在处理中，跳过")
-                return
-            }
-
-            if (conversation.reviveCount < 3) {
-                Log.d(TAG, "触发续命窗口，当前续命次数: ${conversation.reviveCount}")
-                _trainingEndingEvent.value = TrainingEndingEvent("revive")
-            } else {
-                Log.d(TAG, "已续命3次，强制结束")
-                _trainingEndingEvent.value = TrainingEndingEvent("final")
-            }
+        return when (traits.personalityType) {
+            com.example.nativechatdemo.data.model.PersonalityType.CUTE_SOFT ->
+                "嗨~ 很高兴认识你呢 😊"
+            com.example.nativechatdemo.data.model.PersonalityType.LIVELY_CHEERFUL ->
+                "哈哈你好呀！终于等到你了！✨"
+            com.example.nativechatdemo.data.model.PersonalityType.MATURE_GENTLE ->
+                "你好，很高兴认识你 😊"
+            com.example.nativechatdemo.data.model.PersonalityType.COOL_ELEGANT ->
+                "你好。"
+            com.example.nativechatdemo.data.model.PersonalityType.STRAIGHTFORWARD ->
+                "嘿！什么事？"
+            com.example.nativechatdemo.data.model.PersonalityType.LITERARY_INTROVERTED ->
+                "嗯...你好"
         }
     }
 
-    fun updateReviveCount(newCount: Int) {
-        viewModelScope.launch {
-            val currentConv = _conversation.value ?: return@launch
-
-            Log.d(TAG, "更新续命次数: ${currentConv.reviveCount} -> $newCount")
-
-            val updatedConv = currentConv.copy(
-                reviveCount = newCount,
-                updatedAt = System.currentTimeMillis()
-            )
-
-            withContext(Dispatchers.IO) {
-                conversationDao.updateConversation(updatedConv)
-            }
-
-            _conversation.value = updatedConv
-            _trainingEndingEvent.value = null
-
-            Log.d(TAG, "续命次数已更新: $newCount，事件已重置")
-        }
-    }
-
-    fun resetTrainingEvent() {
-        _trainingEndingEvent.value = null
-        Log.d(TAG, "训练事件已手动重置")
+    /**
+     * 清除错误信息
+     */
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

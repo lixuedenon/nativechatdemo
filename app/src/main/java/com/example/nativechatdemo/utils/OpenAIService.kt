@@ -8,10 +8,9 @@
 //   - java.net.HttpURLConnection（网络请求）
 // 引用：被以下文件调用
 //   - ChatViewModel.kt（聊天业务逻辑）
-//   - ReviewActivity.kt（复盘分析，未来）
 // API文档：https://platform.openai.com/docs/api-reference/chat
 // 创建日期：2025-10-28
-// 最后修改：2025-10-28
+// 最后修改：2025-10-29
 // 作者：Claude
 
 package com.example.nativechatdemo.utils
@@ -234,7 +233,7 @@ object OpenAIService {
         }
 
         val response = sendMessage(testMessages, temperature = 0.0)
-        return response.content
+        return@withContext response.content
     }
 
     /**
@@ -322,43 +321,5 @@ class OpenAIException(
                 }
             }
         }
-    }
-}
-
-/**
- * API配置（用于存储和管理API Key）
- */
-object ApiConfig {
-    private const val PREF_NAME = "openai_config"
-    private const val KEY_API_KEY = "api_key"
-    private const val KEY_MODEL = "model"
-
-    /**
-     * 保存API Key到本地（需要传入Context）
-     * 注意：实际项目中应该加密存储
-     */
-    fun saveApiKey(context: android.content.Context, apiKey: String) {
-        context.getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE)
-            .edit()
-            .putString(KEY_API_KEY, apiKey)
-            .apply()
-    }
-
-    /**
-     * 读取API Key
-     */
-    fun loadApiKey(context: android.content.Context): String? {
-        return context.getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE)
-            .getString(KEY_API_KEY, null)
-    }
-
-    /**
-     * 清除API Key
-     */
-    fun clearApiKey(context: android.content.Context) {
-        context.getSharedPreferences(PREF_NAME, android.content.Context.MODE_PRIVATE)
-            .edit()
-            .remove(KEY_API_KEY)
-            .apply()
     }
 }
